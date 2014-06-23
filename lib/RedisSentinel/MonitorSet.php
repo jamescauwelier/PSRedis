@@ -29,11 +29,7 @@ class MonitorSet
      */
     public function __construct($name)
     {
-        $validator = Validation::createValidator();
-        $violations = $validator->validateValue($name, new NotBlank());
-        if ($violations->count() > 0) {
-            throw new InvalidProperty('A monitor set needs a valid name');
-        }
+        $this->guardThatTheNameIsNotBlank($name);
         $this->name = $name;
     }
 
@@ -48,5 +44,18 @@ class MonitorSet
     public function addNode(SentinelNode $node)
     {
         $this->nodes[] = $node;
+    }
+
+    /**
+     * @param $name
+     * @throws Exception\InvalidProperty
+     */
+    private function guardThatTheNameIsNotBlank($name)
+    {
+        $validator = Validation::createValidator();
+        $violations = $validator->validateValue($name, new NotBlank());
+        if ($violations->count() > 0) {
+            throw new InvalidProperty('A monitor set needs a valid name');
+        }
     }
 } 
