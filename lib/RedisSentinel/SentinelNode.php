@@ -15,14 +15,8 @@ use Symfony\Component\Validator\Validation;
  *
  * @package RedisSentinel
  */
-class SentinelNode {
-
-    /**
-     * The name of the sentinel set this node belongs to
-     * @var string
-     */
-    private $name;
-
+class SentinelNode
+{
     /**
      * @var string
      */
@@ -33,22 +27,13 @@ class SentinelNode {
      */
     private $port;
 
-    public function __construct($name, $ipAddress, $port)
+    public function __construct($ipAddress, $port)
     {
         $this->guardThatIpAddressFormatIsValid($ipAddress);
         $this->guardThatServerPortIsValid($port);
 
-        $this->name = $name;
         $this->ipAddress = $ipAddress;
         $this->port = $port;
-    }
-
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
     }
 
     /**
