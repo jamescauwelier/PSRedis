@@ -23,6 +23,12 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($this->monitorSetName, $monitorSet->getName(), 'A monitor set is identified by a name');
     }
 
+    public function testAMonitorSetNameCannotBeEmpty()
+    {
+        $this->setExpectedException('\\RedisSentinel\\Exception\\InvalidProperty', 'A monitor set needs a valid name');
+        $monitorSet = new MonitorSet('');
+    }
+
     public function testThatSentinelNodesCanBeAddedToMonitorSets()
     {
         $monitorSet = new MonitorSet($this->monitorSetName);
