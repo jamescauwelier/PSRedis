@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit bootstrap="tests/bootstrap.php" colors="true" strict="true">
+    <testsuites>
+        <testsuite name="RedisSentinel Test Suite">
+            <directory>tests/RedisSentinelTest/</directory>
+        </testsuite>
+    </testsuites>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">lib/RedisSentinel/</directory>
+        </whitelist>
+    </filter>
+
+</phpunit>
