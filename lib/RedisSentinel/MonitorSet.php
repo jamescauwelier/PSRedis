@@ -17,6 +17,11 @@ class MonitorSet
     private $name;
 
     /**
+     * @var SentinelNode[]
+     */
+    private $nodes = array();
+
+    /**
      * @param string $name
      */
     public function __construct($name)
@@ -30,5 +35,10 @@ class MonitorSet
     public function getName()
     {
         return $this->name;
+    }
+
+    public function addNode(SentinelNode $node)
+    {
+        $this->nodes[] = $node;
     }
 } 
