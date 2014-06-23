@@ -3,7 +3,7 @@
 <phpunit bootstrap="tests/bootstrap.php" colors="true" strict="true">
     <testsuites>
         <testsuite name="RedisSentinel Test Suite">
-            <directory>tests/RedisSentinelTest/</directory>
+            <directory>tests/RedisSentinel/</directory>
         </testsuite>
     </testsuites>
 
