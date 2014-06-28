@@ -1,10 +1,12 @@
 <?php
 
 namespace RedisSentinel;
+
 use RedisSentinel\Exception\InvalidProperty;
+use RedisSentinel\RedisClient\Adapter\Predis;
+use RedisSentinel\RedisClient\Adapter;
 use Symfony\Component\Validator\Constraints\Collection;
 use Symfony\Component\Validator\Constraints\Ip;
-use Symfony\Component\Validator\Constraints\IpValidator;
 use Symfony\Component\Validator\Constraints\Range;
 use Symfony\Component\Validator\Validation;
 
@@ -27,13 +29,29 @@ class SentinelNode
      */
     private $port;
 
-    public function __construct($ipAddress, $port)
+
+    private $redisClientAdapter;
+
+    public function __construct($ipAddress, $port, Adapter $uninitializedRedisClientAdapter = null)
     {
         $this->guardThatIpAddressFormatIsValid($ipAddress);
         $this->guardThatServerPortIsValid($port);
 
         $this->ipAddress = $ipAddress;
         $this->port = $port;
+
+        if (empty($uninitializedRedisClientAdapter)) {
+            $uninitializedRedisClientAdapter = new Predis();
+        }
+        $this->redisClientAdapter = $this->initializeRedisClientAdapter($uninitializedRedisClientAdapter);
+    }
+
+    private function initializeRedisClientAdapter(Adapter $redisClientAdapter)
+    {
+        $redisClientAdapter->setIpAddress($this->getIpAddress());
+        $redisClientAdapter->setPort($this->getPort());
+
+        return $redisClientAdapter;
     }
 
     /**
@@ -77,5 +95,15 @@ class SentinelNode
         if ($violations->count() > 0) {
             throw new InvalidProperty('A sentinel node requires a valid service port');
         }
+    }
+
+    public function connect()
+    {
+        $this->redisClientAdapter->connect();
+    }
+
+    public function isConnected()
+    {
+        return $this->redisClientAdapter->isConnected();
     }
 } 

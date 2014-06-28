@@ -3,6 +3,8 @@
 namespace RedisSentinel;
 
 
+use RedisSentinel\RedisClient\Adapter\FailedConnectionTest;
+
 class MonitorSetTest extends \PHPUnit_Framework_TestCase
 {
     private $monitorSetName = 'name-of-monitor-set';
@@ -12,8 +14,15 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
      */
     private function createMockedSentinelNode()
     {
-        $sentinelNode = \Phake::mock('RedisSentinel\SentinelNode');
+        //$sentinelNode = \Phake::mock('\RedisSentinel\SentinelNode');
+        $sentinelNode = new SentinelNode('127.0.0.1', 2323);
 
+        return $sentinelNode;
+    }
+
+    private function mockSentinelWithFailingConnection()
+    {
+        $sentinelNode = new SentinelNode('127.0.0.1', 2323, new FailedConnectionTest());
         return $sentinelNode;
     }
 
@@ -26,7 +35,7 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
     public function testAMonitorSetNameCannotBeEmpty()
     {
         $this->setExpectedException('\\RedisSentinel\\Exception\\InvalidProperty', 'A monitor set needs a valid name');
-        $monitorSet = new MonitorSet('');
+        new MonitorSet('');
     }
 
     public function testThatSentinelNodesCanBeAddedToMonitorSets()
@@ -42,5 +51,24 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
         $monitorSet = new MonitorSet($this->monitorSetName);
         $monitorSet->addNode(new \StdClass());
     }
+
+    public function testThatWeNeedNodesConfigurationToDiscoverAMaster()
+    {
+        $this->setExpectedException('\\RedisSentinel\\Exception\\ConfigurationError', 'You need to configure and add sentinel nodes before attempting to fetch a master');
+        $monitorSet = new MonitorSet($this->monitorSetName);
+        $monitorSet->getMaster();
+    }
+
+    public function testThatMasterCannotBeFoundIfWeCannotConnectToSentinels()
+    {
+        $this->setExpectedException('\\RedisSentinel\\Exception\\ConnectionError', 'All sentinels are unreachable');
+        $sentinel1 = $this->mockSentinelWithFailingConnection();
+        $sentinel2 = $this->mockSentinelWithFailingConnection();
+        $monitorSet = new MonitorSet('all-fail');
+        $monitorSet->addNode($sentinel1);
+        $monitorSet->addNode($sentinel2);
+        $monitorSet->getMaster();
+    }
+
 }
  
