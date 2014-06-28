@@ -2,6 +2,10 @@
 
 namespace RedisSentinel;
 
+use RedisSentinel\Exception\ConnectionError;
+use RedisSentinel\RedisClient\Adapter\ConnectionTest;
+use RedisSentinel\RedisClient\Adapter\FailedConnectionTest;
+
 class SentinelNodeTest extends \PHPUnit_Framework_TestCase
 {
     private $ipAddress = '127.0.0.1';
@@ -16,7 +20,7 @@ class SentinelNodeTest extends \PHPUnit_Framework_TestCase
     public function testSentinelRequiresAValidIpAddress()
     {
         $this->setExpectedException('\\RedisSentinel\\Exception\\InvalidProperty', 'A sentinel node requires a valid IP address');
-        $sentinel = new SentinelNode('blabla', $this->port);
+        new SentinelNode('blabla', $this->port);
     }
 
     public function testSentinelHasPort()
@@ -25,11 +29,55 @@ class SentinelNodeTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($this->port, $sentinel->getPort(), 'A sentinel location needs a port to be identifiable');
     }
 
+    public function testSentinelHasPredisAsStandardAdapter()
+    {
+        $sentinel = new SentinelNode($this->ipAddress, $this->port);
+        $this->assertAttributeInstanceOf('\\RedisSentinel\\RedisClient\\Adapter\\Predis', 'redisClientAdapter', $sentinel, 'By default, the library uses predis to make connection with redis');
+    }
+
+    public function testSentinelAcceptsOtherAdapters()
+    {
+        $nullAdapter = new FailedConnectionTest();
+        $sentinel = new SentinelNode($this->ipAddress, $this->port, $nullAdapter);
+        $this->assertAttributeInstanceOf('\\RedisSentinel\\RedisClient\\Adapter\\FailedConnectionTest', 'redisClientAdapter', $sentinel, 'The used redis client adapter can be swapped');
+    }
+
     public function testSentinelRefusesTextAsAnInvalidPort()
     {
         $this->setExpectedException('\\RedisSentinel\\Exception\\InvalidProperty', 'A sentinel node requires a valid service port');
-        $sentinel = new SentinelNode($this->ipAddress, 'abc');
+        new SentinelNode($this->ipAddress, 'abc');
     }
 
+    public function testThatFailureToConnectToSentinelsThrowsAnError()
+    {
+        $this->setExpectedException('\\RedisSentinel\\Exception\ConnectionError', sprintf('Could not connect to sentinel at %s:%d', $this->ipAddress, $this->port));
+
+        $sentinelNode = new SentinelNode($this->ipAddress, $this->port, new FailedConnectionTest());
+        $sentinelNode->connect();
+    }
+
+    public function testThatBeforeConnectingSentinelNodesKnowTheirConnectionState()
+    {
+        $sentinelNode = new SentinelNode($this->ipAddress, $this->port, new FailedConnectionTest());
+        $this->assertFalse($sentinelNode->isConnected(), 'A new sentinel code object is not connected');
+    }
+
+    public function testThatAfterAFailedConnectionAttemptSentinelNodesKnowTheirConnectionState()
+    {
+        $sentinelNode = new SentinelNode($this->ipAddress, $this->port, new FailedConnectionTest());
+        try {
+            $sentinelNode->connect();
+        } catch (ConnectionError $e) {
+
+        }
+        $this->assertFalse($sentinelNode->isConnected(), 'After a failed connection attempt, the connection state should be bool(false)');
+    }
+
+    public function testThatAfterASuccessfullConnectionTheSentinelsKnowsTheirConnectionState()
+    {
+        $sentinelNode = new SentinelNode($this->ipAddress, $this->port, new ConnectionTest());
+        $sentinelNode->connect();
+        $this->assertTrue($sentinelNode->isConnected(), 'After a successfull connection attempt, the connection state is bool(true)');
+    }
 }
  
