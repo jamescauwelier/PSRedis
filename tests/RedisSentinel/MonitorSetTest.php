@@ -3,26 +3,39 @@
 namespace RedisSentinel;
 
 
-use RedisSentinel\RedisClient\Adapter\FailedConnectionTest;
+use RedisSentinel\Exception\ConnectionError;
 
 class MonitorSetTest extends \PHPUnit_Framework_TestCase
 {
     private $monitorSetName = 'name-of-monitor-set';
+    private $ipAddress = '127.0.0.1';
+    private $port = 2323;
 
     /**
      * @return \RedisSentinel\SentinelNode
      */
-    private function createMockedSentinelNode()
+    private function mockOnlineSentinel()
     {
-        //$sentinelNode = \Phake::mock('\RedisSentinel\SentinelNode');
-        $sentinelNode = new SentinelNode('127.0.0.1', 2323);
+        $sentinelNode = \Phake::mock('\\RedisSentinel\\SentinelNode');
+        \Phake::when($sentinelNode)->connect()->thenReturn(null);
+        \Phake::when($sentinelNode)->getIpAddress()->thenReturn($this->ipAddress);
+        \Phake::when($sentinelNode)->getPort()->thenReturn($this->port);
 
         return $sentinelNode;
     }
 
+    /**
+     * @return \RedisSentinel\SentinelNode
+     */
     private function mockSentinelWithFailingConnection()
     {
-        $sentinelNode = new SentinelNode('127.0.0.1', 2323, new FailedConnectionTest());
+        $sentinelNode = \Phake::mock('\\RedisSentinel\\SentinelNode');
+        \Phake::when($sentinelNode)->connect()->thenThrow(
+            new ConnectionError(sprintf('Could not connect to sentinel at %s:%d', $this->ipAddress, $this->port))
+        );
+        \Phake::when($sentinelNode)->getIpAddress()->thenReturn($this->ipAddress);
+        \Phake::when($sentinelNode)->getPort()->thenReturn($this->port);
+
         return $sentinelNode;
     }
 
@@ -41,7 +54,7 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
     public function testThatSentinelNodesCanBeAddedToMonitorSets()
     {
         $monitorSet = new MonitorSet($this->monitorSetName);
-        $monitorSet->addNode($this->createMockedSentinelNode());
+        $monitorSet->addNode($this->mockOnlineSentinel());
         $this->assertAttributeCount(1, 'nodes', $monitorSet, 'Sentinel node can be added to a monitor set');
     }
 

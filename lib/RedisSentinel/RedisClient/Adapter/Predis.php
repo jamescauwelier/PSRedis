@@ -13,9 +13,4 @@ class Predis
     {
 
     }
-
-    public function isConnected()
-    {
-        return true;
-    }
 } 

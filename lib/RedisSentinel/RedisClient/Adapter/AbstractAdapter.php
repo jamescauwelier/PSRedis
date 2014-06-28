@@ -10,6 +10,8 @@ abstract class AbstractAdapter
 
     protected $port;
 
+    protected $isConnected = false;
+
     public function setIpAddress($ipAddress)
     {
         $this->ipAddress = $ipAddress;
@@ -18,5 +20,10 @@ abstract class AbstractAdapter
     public function setPort($port)
     {
         $this->port = $port;
+    }
+
+    public function isConnected()
+    {
+        return $this->isConnected;
     }
 } 
