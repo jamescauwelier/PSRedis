@@ -1,10 +1,10 @@
 <?php
 
-namespace RedisSentinel;
+namespace Sentinel;
 
-use RedisSentinel\Exception\ConfigurationError;
-use RedisSentinel\Exception\ConnectionError;
-use RedisSentinel\Exception\InvalidProperty;
+use Sentinel\Exception\ConfigurationError;
+use Sentinel\Exception\ConnectionError;
+use Sentinel\Exception\InvalidProperty;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Validation;
 
@@ -13,7 +13,7 @@ use Symfony\Component\Validator\Validation;
  *
  * Represents a set of sentinel nodes that are monitoring a master with it's slaves
  *
- * @package RedisSentinel
+ * @package Sentinel
  */
 class MonitorSet
 {
@@ -23,7 +23,7 @@ class MonitorSet
     private $name;
 
     /**
-     * @var SentinelNode[]
+     * @var Client[]
      */
     private $nodes = array();
 
@@ -44,7 +44,7 @@ class MonitorSet
         return $this->name;
     }
 
-    public function addNode(SentinelNode $node)
+    public function addNode(Client $node)
     {
         $this->nodes[] = $node;
     }
@@ -67,6 +67,11 @@ class MonitorSet
         }
     }
 
+    /**
+     * @return Client\SentinelClientAdapter
+     * @throws Exception\ConnectionError
+     * @throws Exception\ConfigurationError
+     */
     public function getMaster()
     {
         if ($this->getNodes()->count() == 0) {
@@ -74,10 +79,10 @@ class MonitorSet
         }
 
         foreach ($this->getNodes() as $sentinelNode) {
-            /** @var $sentinelNode SentinelNode */
+            /** @var $sentinelNode Client */
             try {
                 $sentinelNode->connect();
-                return;
+                return $sentinelNode->getClientAdapter();
             } catch (ConnectionError $e) {
                 // on error, try to connect to next node
             }

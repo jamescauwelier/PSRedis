@@ -1,15 +1,9 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: jamescauwelier
- * Date: 6/27/14
- * Time: 5:24 PM
- */
 
-namespace RedisSentinel\RedisClient;
+namespace Sentinel\Client;
 
 
-interface Adapter {
+interface SentinelClientAdapter {
     public function setIpAddress($ipAddress);
     public function setPort($port);
     public function connect();

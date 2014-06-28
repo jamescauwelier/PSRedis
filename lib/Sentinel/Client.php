@@ -1,23 +1,23 @@
 <?php
 
-namespace RedisSentinel;
+namespace Sentinel;
 
-use RedisSentinel\Exception\InvalidProperty;
-use RedisSentinel\RedisClient\Adapter\Predis;
-use RedisSentinel\RedisClient\Adapter;
+use Sentinel\Exception\InvalidProperty;
+use Sentinel\Client\Adapter\PredisSentinelClientAdapter;
+use Sentinel\Client\SentinelClientAdapter;
 use Symfony\Component\Validator\Constraints\Collection;
 use Symfony\Component\Validator\Constraints\Ip;
 use Symfony\Component\Validator\Constraints\Range;
 use Symfony\Component\Validator\Validation;
 
 /**
- * Class SentinelNode
+ * Class Client
  *
  * Represents one single sentinel node and provides identification if we want to connect to it
  *
- * @package RedisSentinel
+ * @package Sentinel
  */
-class SentinelNode
+class Client
 {
     /**
      * @var string
@@ -30,9 +30,9 @@ class SentinelNode
     private $port;
 
 
-    private $redisClientAdapter;
+    private $clientAdapter;
 
-    public function __construct($ipAddress, $port, Adapter $uninitializedRedisClientAdapter = null)
+    public function __construct($ipAddress, $port, SentinelClientAdapter $uninitializedClientAdapter = null)
     {
         $this->guardThatIpAddressFormatIsValid($ipAddress);
         $this->guardThatServerPortIsValid($port);
@@ -40,18 +40,18 @@ class SentinelNode
         $this->ipAddress = $ipAddress;
         $this->port = $port;
 
-        if (empty($uninitializedRedisClientAdapter)) {
-            $uninitializedRedisClientAdapter = new Predis();
+        if (empty($uninitializedClientAdapter)) {
+            $uninitializedClientAdapter = new PredisSentinelClientAdapter();
         }
-        $this->redisClientAdapter = $this->initializeRedisClientAdapter($uninitializedRedisClientAdapter);
+        $this->clientAdapter = $this->initializeClientAdapter($uninitializedClientAdapter);
     }
 
-    private function initializeRedisClientAdapter(Adapter $redisClientAdapter)
+    private function initializeClientAdapter(SentinelClientAdapter $clientAdapter)
     {
-        $redisClientAdapter->setIpAddress($this->getIpAddress());
-        $redisClientAdapter->setPort($this->getPort());
+        $clientAdapter->setIpAddress($this->getIpAddress());
+        $clientAdapter->setPort($this->getPort());
 
-        return $redisClientAdapter;
+        return $clientAdapter;
     }
 
     /**
@@ -99,11 +99,16 @@ class SentinelNode
 
     public function connect()
     {
-        $this->redisClientAdapter->connect();
+        $this->clientAdapter->connect();
     }
 
     public function isConnected()
     {
-        return $this->redisClientAdapter->isConnected();
+        return $this->clientAdapter->isConnected();
+    }
+
+    public function getClientAdapter()
+    {
+        return $this->clientAdapter;
     }
 } 

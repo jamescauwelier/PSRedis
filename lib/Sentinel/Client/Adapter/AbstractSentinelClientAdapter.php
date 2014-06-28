@@ -1,10 +1,8 @@
 <?php
 
+namespace Sentinel\Client\Adapter;
 
-namespace RedisSentinel\RedisClient\Adapter;
-
-
-abstract class AbstractAdapter
+abstract class AbstractSentinelClientAdapter
 {
     protected $ipAddress;
 
