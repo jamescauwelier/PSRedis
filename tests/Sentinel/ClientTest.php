@@ -5,7 +5,7 @@ namespace Sentinel;
 use Sentinel\Exception\ConnectionError;
 use Sentinel\Client\Adapter\NullSentinelClientAdapter;
 
-class SentinelNodeTest extends \PHPUnit_Framework_TestCase
+class ClientTest extends \PHPUnit_Framework_TestCase
 {
     private $ipAddress = '127.0.0.1';
     private $port = 2323;
