@@ -2,6 +2,7 @@
 
 namespace Sentinel;
 
+use Sentinel\Client\Adapter\Predis\PredisClientCreator;
 use Sentinel\Exception\InvalidProperty;
 use Sentinel\Client\Adapter\PredisSentinelClientAdapter;
 use Sentinel\Client\SentinelClientAdapter;
@@ -41,7 +42,7 @@ class Client
         $this->port = $port;
 
         if (empty($uninitializedClientAdapter)) {
-            $uninitializedClientAdapter = new PredisSentinelClientAdapter();
+            $uninitializedClientAdapter = new PredisSentinelClientAdapter(new PredisClientCreator());
         }
         $this->clientAdapter = $this->initializeClientAdapter($uninitializedClientAdapter);
     }
