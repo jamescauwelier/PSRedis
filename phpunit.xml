@@ -2,14 +2,14 @@
 
 <phpunit bootstrap="tests/bootstrap.php" colors="true" strict="true">
     <testsuites>
-        <testsuite name="Sentinel Test Suite">
-            <directory>tests/Sentinel/</directory>
+        <testsuite name="Redis sentinel Test Suite">
+            <directory>tests/Redis/</directory>
         </testsuite>
     </testsuites>
 
     <filter>
         <whitelist>
-            <directory suffix=".php">lib/Sentinel/</directory>
+            <directory suffix=".php">lib/Redis/</directory>
         </whitelist>
     </filter>
 

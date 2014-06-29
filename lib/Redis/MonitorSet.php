@@ -1,10 +1,10 @@
 <?php
 
-namespace Sentinel;
+namespace Redis;
 
-use Sentinel\Exception\ConfigurationError;
-use Sentinel\Exception\ConnectionError;
-use Sentinel\Exception\InvalidProperty;
+use Redis\Exception\ConfigurationError;
+use Redis\Exception\ConnectionError;
+use Redis\Exception\InvalidProperty;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Validation;
 
@@ -78,11 +78,14 @@ class MonitorSet
             throw new ConfigurationError('You need to configure and add sentinel nodes before attempting to fetch a master');
         }
 
-        foreach ($this->getNodes() as $sentinelNode) {
-            /** @var $sentinelNode Client */
+        foreach ($this->getNodes() as $sentinelClient) {
+            /** @var $sentinelClient Client */
             try {
-                $sentinelNode->connect();
-                return $sentinelNode->getClientAdapter();
+                $sentinelClient->connect();
+                $redisClient = $sentinelClient->getMaster();
+                if ($redisClient->isMaster()) {
+                    return $redisClient;
+                }
             } catch (ConnectionError $e) {
                 // on error, try to connect to next node
             }

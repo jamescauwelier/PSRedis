@@ -19,6 +19,6 @@
         "phake/phake": "@stable"
     },
     "autoload": {
-        "psr-0": {"Sentinel": "lib/"}
+        "psr-0": {"Sentinel": "lib/", "Redis": "lib/"}
     }
 }

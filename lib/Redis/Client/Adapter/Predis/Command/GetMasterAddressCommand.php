@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Sentinel\Client\Adapter\Predis\Command;
+namespace Redis\Client\Adapter\Predis\Command;
 
 
 use Predis\Command\AbstractCommand;

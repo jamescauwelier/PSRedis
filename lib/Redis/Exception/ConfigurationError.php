@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Sentinel\Exception;
+namespace Redis\Exception;
 
 
 class ConfigurationError extends \Exception

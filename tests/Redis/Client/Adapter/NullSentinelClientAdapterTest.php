@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Sentinel\Client\Adapter;
+namespace Redis\Client\Adapter;
 
 
 class NullSentinelClientAdapterTest extends \PHPUnit_Framework_TestCase

@@ -1,10 +1,10 @@
 <?php
 
 
-namespace Sentinel\Client\Adapter;
+namespace Redis\Client\Adapter;
 
 
-use Sentinel\Client\Adapter\Predis\MockedPredisClientCreator;
+use Redis\Client\Adapter\Predis\MockedPredisClientCreator;
 
 class PredisSentinelClientAdapterTest extends \PHPUnit_Framework_TestCase
 {

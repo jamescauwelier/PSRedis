@@ -1,9 +1,9 @@
 <?php
 
-namespace Sentinel\Client\Adapter;
+namespace Redis\Client\Adapter;
 
-use Sentinel\Client\Adapter\Predis\PredisClientFactory;
-use Sentinel\Client\SentinelClientAdapter;
+use Redis\Client\Adapter\Predis\PredisClientFactory;
+use Redis\Client\SentinelClientAdapter;
 
 class PredisSentinelClientAdapter
     extends AbstractSentinelClientAdapter
@@ -15,7 +15,7 @@ class PredisSentinelClientAdapter
     private $predisClient;
 
     /**
-     * @var Predis\PredisClientFactory
+     * @var \Redis\Client\Adapter\Predis\PredisClientFactory
      */
     private $predisClientFactory;
 
@@ -26,7 +26,8 @@ class PredisSentinelClientAdapter
 
     public function connect()
     {
-        $this->predisClient = $this->predisClientFactory->create($this->getPredisClientParameters());
+        $this->predisClient = $this->predisClientFactory->createSentinelClient($this->getPredisClientParameters());
+        $this->predisClient->connect();
     }
 
     private function getPredisClientParameters()
@@ -36,5 +37,11 @@ class PredisSentinelClientAdapter
             'host'      => $this->ipAddress,
             'port'      => $this->port,
         );
+    }
+
+    public function getMaster()
+    {
+        $masterRedisParameters = array();
+        return $this->predisClientFactory->createRedisClient($masterRedisParameters);
     }
 } 
