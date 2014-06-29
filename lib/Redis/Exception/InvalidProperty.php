@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Sentinel\Exception;
+namespace Redis\Exception;
 
 
 class InvalidProperty extends \Exception

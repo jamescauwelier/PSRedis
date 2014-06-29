@@ -1,8 +1,8 @@
 <?php
 
-namespace Sentinel\Client\Adapter;
+namespace Redis\Client\Adapter;
 
-use Sentinel\Client\SentinelClientAdapter;
+use Redis\Client\SentinelClientAdapter;
 
 /**
  * Class NullSentinelClientAdapter
@@ -23,4 +23,8 @@ class NullSentinelClientAdapter
         $this->isConnected = true;
     }
 
+    public function getMaster()
+    {
+        return new \StdClass();
+    }
 }

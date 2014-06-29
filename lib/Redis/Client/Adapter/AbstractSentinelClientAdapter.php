@@ -1,6 +1,6 @@
 <?php
 
-namespace Sentinel\Client\Adapter;
+namespace Redis\Client\Adapter;
 
 abstract class AbstractSentinelClientAdapter
 {

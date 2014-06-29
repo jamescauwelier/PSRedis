@@ -1,6 +1,6 @@
 <?php
 
-namespace Sentinel\Client;
+namespace Redis\Client;
 
 
 interface SentinelClientAdapter {
@@ -8,4 +8,5 @@ interface SentinelClientAdapter {
     public function setPort($port);
     public function connect();
     public function isConnected();
+    public function getMaster();
 } 

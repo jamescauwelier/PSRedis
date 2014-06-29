@@ -1,11 +1,11 @@
 <?php
 
-namespace Sentinel;
+namespace Redis;
 
-use Sentinel\Client\Adapter\Predis\PredisClientCreator;
-use Sentinel\Exception\InvalidProperty;
-use Sentinel\Client\Adapter\PredisSentinelClientAdapter;
-use Sentinel\Client\SentinelClientAdapter;
+use Redis\Client\Adapter\Predis\PredisClientCreator;
+use Redis\Exception\InvalidProperty;
+use Redis\Client\Adapter\PredisSentinelClientAdapter;
+use Redis\Client\SentinelClientAdapter;
 use Symfony\Component\Validator\Constraints\Collection;
 use Symfony\Component\Validator\Constraints\Ip;
 use Symfony\Component\Validator\Constraints\Range;
@@ -111,5 +111,15 @@ class Client
     public function getClientAdapter()
     {
         return $this->clientAdapter;
+    }
+
+    public function getMaster()
+    {
+        return $this->clientAdapter->getMaster();
+    }
+
+    public function isMaster()
+    {
+        return false;
     }
 } 
