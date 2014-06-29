@@ -2,7 +2,9 @@
 
 namespace Sentinel;
 
+require_once __DIR__.'/Client/Adapter/Predis/MockedPredisClientCreator.php';
 
+use Sentinel\Client\Adapter\Predis\MockedPredisClientCreator;
 use Sentinel\Exception\ConnectionError;
 use Sentinel\Client\Adapter\PredisSentinelClientAdapter;
 
@@ -21,7 +23,7 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
      */
     private function mockOnlineSentinel()
     {
-        $clientAdapter = new PredisSentinelClientAdapter();
+        $clientAdapter = new PredisSentinelClientAdapter(new MockedPredisClientCreator());
         $sentinelClient = \Phake::mock('\\Sentinel\\Client');
         \Phake::when($sentinelClient)->connect()->thenReturn(null);
         \Phake::when($sentinelClient)->getIpAddress()->thenReturn($this->onlineIpAddress);

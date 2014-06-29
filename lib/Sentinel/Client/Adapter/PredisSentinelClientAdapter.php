@@ -2,8 +2,7 @@
 
 namespace Sentinel\Client\Adapter;
 
-use Sentinel\Client\Adapter\Predis\Command\GetMasterAddressCommand;
-use Sentinel\Client\Adapter\Predis\Command\RoleCommand;
+use Sentinel\Client\Adapter\Predis\PredisClientFactory;
 use Sentinel\Client\SentinelClientAdapter;
 
 class PredisSentinelClientAdapter
@@ -15,9 +14,19 @@ class PredisSentinelClientAdapter
      */
     private $predisClient;
 
+    /**
+     * @var Predis\PredisClientFactory
+     */
+    private $predisClientFactory;
+
+    public function __construct(PredisClientFactory $clientFactory)
+    {
+        $this->predisClientFactory = $clientFactory;
+    }
+
     public function connect()
     {
-        $this->createSentinelClient();
+        $this->predisClient = $this->predisClientFactory->create($this->getPredisClientParameters());
     }
 
     private function getPredisClientParameters()
@@ -26,17 +35,6 @@ class PredisSentinelClientAdapter
             'scheme'    => 'tcp',
             'host'      => $this->ipAddress,
             'port'      => $this->port,
-        );
-    }
-
-    private function createSentinelClient()
-    {
-        $this->predisClient = new \Predis\Client($this->getPredisClientParameters());
-        $this->predisClient->getProfile()->defineCommand(
-            'getmasteraddress', '\\Sentinel\\Client\\Adapter\\Predis\\Command\\GetMasterAddressCommand'
-        );
-        $this->predisClient->getProfile()->defineCommand(
-            'role', '\\Sentinel\\Client\\Adapter\\Predis\\Command\\RoleCommand'
         );
     }
 } 
