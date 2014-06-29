@@ -3,7 +3,7 @@
 namespace Redis\Client;
 
 
-interface SentinelClientAdapter {
+interface ClientAdapter {
     public function setIpAddress($ipAddress);
     public function setPort($port);
     public function connect();

@@ -5,8 +5,9 @@ namespace Redis;
 require_once __DIR__.'/Client/Adapter/Predis/MockedPredisClientCreator.php';
 
 use Redis\Client\Adapter\Predis\MockedPredisClientCreator;
+use Redis\Client\BackoffStrategy\Incremental;
 use Redis\Exception\ConnectionError;
-use Redis\Client\Adapter\PredisSentinelClientAdapter;
+use Redis\Client\Adapter\PredisClientAdapter;
 
 class MonitorSetTest extends \PHPUnit_Framework_TestCase
 {
@@ -18,6 +19,9 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
     private $onlineMasterIpAddress = '198.100.10.1';
     private $onlineMasterPort = 5050;
 
+    private $onlineSteppingDownMasterIpAddress = '198.100.10.1';
+    private $onlineSteppingDownMasterPort = 5050;
+
     private $offlineSentinelIpAddress = '127.0.0.1';
     private $offlineSentinelPort = 2323;
 
@@ -26,14 +30,14 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
      */
     private function mockOnlineSentinel()
     {
-        $clientAdapter = new PredisSentinelClientAdapter(new MockedPredisClientCreator());
+        $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreator());
 
         $redisClient = \Phake::mock('\\Redis\Client');
         \Phake::when($redisClient)->getIpAddress()->thenReturn($this->onlineMasterIpAddress);
         \Phake::when($redisClient)->getPort()->thenReturn($this->onlineMasterPort);
+        \Phake::when($redisClient)->isMaster()->thenReturn(true);
 
         $sentinelClient = \Phake::mock('\\Redis\\Client');
-        \Phake::when($redisClient)->isMaster()->thenReturn(true);
         \Phake::when($sentinelClient)->connect()->thenReturn(null);
         \Phake::when($sentinelClient)->getIpAddress()->thenReturn($this->onlineSentinelIpAddress);
         \Phake::when($sentinelClient)->getPort()->thenReturn($this->onlineSentinelPort);
@@ -58,6 +62,32 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
         return $sentinelClient;
     }
 
+    private function mockOnlineSentinelWithMasterSteppingDown()
+    {
+        $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreator());
+
+        $masterNodeSteppingDown = \Phake::mock('\\Redis\Client');
+        \Phake::when($masterNodeSteppingDown)->getIpAddress()->thenReturn($this->onlineSteppingDownMasterIpAddress);
+        \Phake::when($masterNodeSteppingDown)->getPort()->thenReturn($this->onlineSteppingDownMasterPort);
+        \Phake::when($masterNodeSteppingDown)->isMaster()->thenReturn(false);
+
+        $masterNode = \Phake::mock('\\Redis\Client');
+        \Phake::when($masterNode)->getIpAddress()->thenReturn($this->onlineMasterIpAddress);
+        \Phake::when($masterNode)->getPort()->thenReturn($this->onlineMasterPort);
+        \Phake::when($masterNode)->isMaster()->thenReturn(true);
+
+        $sentinelClient = \Phake::mock('\\Redis\\Client');
+        \Phake::when($sentinelClient)->connect()->thenReturn(null);
+        \Phake::when($sentinelClient)->getIpAddress()->thenReturn($this->onlineSentinelIpAddress);
+        \Phake::when($sentinelClient)->getPort()->thenReturn($this->onlineSentinelPort);
+        \Phake::when($sentinelClient)->getClientAdapter()->thenReturn($clientAdapter);
+        \Phake::when($sentinelClient)->getMaster()
+            ->thenReturn($masterNodeSteppingDown)
+            ->thenReturn($masterNode);
+
+        return $sentinelClient;
+    }
+
     public function testAMonitorSetHasAName()
     {
         $monitorSet = new MonitorSet($this->monitorSetName);
@@ -73,15 +103,15 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
     public function testThatSentinelClientsCanBeAddedToMonitorSets()
     {
         $monitorSet = new MonitorSet($this->monitorSetName);
-        $monitorSet->addNode($this->mockOnlineSentinel());
-        $this->assertAttributeCount(1, 'nodes', $monitorSet, 'Sentinel node can be added to a monitor set');
+        $monitorSet->addSentinel($this->mockOnlineSentinel());
+        $this->assertAttributeCount(1, 'sentinels', $monitorSet, 'Sentinel node can be added to a monitor set');
     }
 
     public function testThatOnlySentinelClientObjectsCanBeAddedAsNode()
     {
-        $this->setExpectedException('\\PHPUnit_Framework_Error', 'Argument 1 passed to Redis\MonitorSet::addNode() must be an instance of Redis\Client');
+        $this->setExpectedException('\\PHPUnit_Framework_Error', 'Argument 1 passed to Redis\MonitorSet::addSentinel() must be an instance of Redis\Client');
         $monitorSet = new MonitorSet($this->monitorSetName);
-        $monitorSet->addNode(new \StdClass());
+        $monitorSet->addSentinel(new \StdClass());
     }
 
     public function testThatWeNeedNodesConfigurationToDiscoverAMaster()
@@ -97,18 +127,23 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
         $sentinel1 = $this->mockOfflineSentinel();
         $sentinel2 = $this->mockOfflineSentinel();
         $monitorSet = new MonitorSet('all-fail');
-        $monitorSet->addNode($sentinel1);
-        $monitorSet->addNode($sentinel2);
+        $monitorSet->addSentinel($sentinel1);
+        $monitorSet->addSentinel($sentinel2);
         $monitorSet->getMaster();
     }
 
     public function testThatSentinelNodeIsReturnedOnSuccessfulMasterDiscovery()
     {
+        $noBackoff = new Incremental(0, 1);
+        $noBackoff->setMaxAttempts(1);
+
         $sentinel1 = $this->mockOfflineSentinel();
         $sentinel2 = $this->mockOnlineSentinel();
+
         $monitorSet = new MonitorSet('online-sentinel');
-        $monitorSet->addNode($sentinel1);
-        $monitorSet->addNode($sentinel2);
+        $monitorSet->setBackoffStrategy($noBackoff);
+        $monitorSet->addSentinel($sentinel1);
+        $monitorSet->addSentinel($sentinel2);
         $masterNode = $monitorSet->getMaster();
 
         $this->assertInstanceOf('\\Redis\\Client', $masterNode, 'The master returned should be an instance of \\Redis\\Client');
@@ -116,5 +151,34 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($this->onlineMasterPort, $masterNode->getPort(), 'The master node IP port returned should be the one of the online sentinel');
     }
 
+    public function testThatMasterStatusOfANodeIsCheckedAfterConnecting()
+    {
+        $this->setExpectedException('\\Redis\\Exception\\RoleError', 'Only a node with role master may be returned (maybe the master was stepping down during connection?)');
+
+        $sentinel1 = $this->mockOnlineSentinelWithMasterSteppingDown();
+        $sentinel2 = $this->mockOnlineSentinel();
+        $monitorSet = new MonitorSet('online-sentinel');
+        $monitorSet->addSentinel($sentinel1);
+        $monitorSet->addSentinel($sentinel2);
+        $monitorSet->getMaster();
+    }
+
+    public function testThatABackoffIsAttempted()
+    {
+        $backoffOnce = new Incremental(0, 1);
+        $backoffOnce->setMaxAttempts(2);
+
+        $sentinel1 = $this->mockOfflineSentinel();
+        $sentinel2 = $this->mockOnlineSentinelWithMasterSteppingDown();
+
+        $monitorSet = new MonitorSet('online-sentinel');
+        $monitorSet->setBackoffStrategy($backoffOnce);
+        $monitorSet->addSentinel($sentinel1);
+        $monitorSet->addSentinel($sentinel2);
+        $masterNode = $monitorSet->getMaster();
+
+        $this->assertEquals($this->onlineMasterIpAddress, $masterNode->getIpAddress(), 'A master that stepped down between discovery and connecting should be retried after backoff (check IP address)');
+        $this->assertEquals($this->onlineMasterPort, $masterNode->getPort(), 'A master that stepped down between discovery and connecting should be retried after backoff (check port)');
+    }
 }
  

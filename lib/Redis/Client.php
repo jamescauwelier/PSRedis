@@ -4,8 +4,8 @@ namespace Redis;
 
 use Redis\Client\Adapter\Predis\PredisClientCreator;
 use Redis\Exception\InvalidProperty;
-use Redis\Client\Adapter\PredisSentinelClientAdapter;
-use Redis\Client\SentinelClientAdapter;
+use Redis\Client\Adapter\PredisClientAdapter;
+use Redis\Client\ClientAdapter;
 use Symfony\Component\Validator\Constraints\Collection;
 use Symfony\Component\Validator\Constraints\Ip;
 use Symfony\Component\Validator\Constraints\Range;
@@ -33,7 +33,7 @@ class Client
 
     private $clientAdapter;
 
-    public function __construct($ipAddress, $port, SentinelClientAdapter $uninitializedClientAdapter = null)
+    public function __construct($ipAddress, $port, ClientAdapter $uninitializedClientAdapter = null)
     {
         $this->guardThatIpAddressFormatIsValid($ipAddress);
         $this->guardThatServerPortIsValid($port);
@@ -42,12 +42,12 @@ class Client
         $this->port = $port;
 
         if (empty($uninitializedClientAdapter)) {
-            $uninitializedClientAdapter = new PredisSentinelClientAdapter(new PredisClientCreator());
+            $uninitializedClientAdapter = new PredisClientAdapter(new PredisClientCreator());
         }
         $this->clientAdapter = $this->initializeClientAdapter($uninitializedClientAdapter);
     }
 
-    private function initializeClientAdapter(SentinelClientAdapter $clientAdapter)
+    private function initializeClientAdapter(ClientAdapter $clientAdapter)
     {
         $clientAdapter->setIpAddress($this->getIpAddress());
         $clientAdapter->setPort($this->getPort());
@@ -113,6 +113,9 @@ class Client
         return $this->clientAdapter;
     }
 
+    /**
+     * @return \Redis\Client
+     */
     public function getMaster()
     {
         return $this->clientAdapter->getMaster();

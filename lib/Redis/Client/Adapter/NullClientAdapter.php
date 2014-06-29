@@ -2,7 +2,7 @@
 
 namespace Redis\Client\Adapter;
 
-use Redis\Client\SentinelClientAdapter;
+use Redis\Client\ClientAdapter;
 
 /**
  * Class NullSentinelClientAdapter
@@ -13,9 +13,9 @@ use Redis\Client\SentinelClientAdapter;
  *
  * @package Sentinel\Client\Adapter
  */
-class NullSentinelClientAdapter
+class NullClientAdapter
     extends AbstractSentinelClientAdapter
-    implements SentinelClientAdapter
+    implements ClientAdapter
 {
 
     public function connect()
