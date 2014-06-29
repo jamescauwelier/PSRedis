@@ -3,7 +3,7 @@
 namespace Redis;
 
 use Redis\Exception\ConnectionError;
-use Redis\Client\Adapter\NullSentinelClientAdapter;
+use Redis\Client\Adapter\NullClientAdapter;
 
 class ClientTest extends \PHPUnit_Framework_TestCase
 {
@@ -12,7 +12,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
     private function mockOfflineClientAdapter()
     {
-        $redisClientAdapter = \Phake::mock('\\Redis\\Client\\Adapter\\PredisSentinelClientAdapter');
+        $redisClientAdapter = \Phake::mock('\\Redis\\Client\\Adapter\\PredisClientAdapter');
         \Phake::when($redisClientAdapter)->connect()->thenThrow(
             new ConnectionError(sprintf('Could not connect to sentinel at %s:%d', $this->ipAddress, $this->port))
         );
@@ -23,7 +23,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
     private function mockOnlineClientAdapter()
     {
-        $redisClientAdapter = \Phake::mock('\\Redis\\Client\\Adapter\\PredisSentinelClientAdapter');
+        $redisClientAdapter = \Phake::mock('\\Redis\\Client\\Adapter\\PredisClientAdapter');
         \Phake::when($redisClientAdapter)->isConnected()->thenReturn(true);
 
         return $redisClientAdapter;
@@ -50,13 +50,13 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     public function testSentinelHasPredisAsStandardAdapter()
     {
         $sentinel = new Client($this->ipAddress, $this->port);
-        $this->assertAttributeInstanceOf('\\Redis\\Client\\Adapter\\PredisSentinelClientAdapter', 'clientAdapter', $sentinel, 'By default, the library uses predis to make connection with redis');
+        $this->assertAttributeInstanceOf('\\Redis\\Client\\Adapter\\PredisClientAdapter', 'clientAdapter', $sentinel, 'By default, the library uses predis to make connection with redis');
     }
 
     public function testSentinelAcceptsOtherAdapters()
     {
-        $sentinel = new Client($this->ipAddress, $this->port, new NullSentinelClientAdapter());
-        $this->assertAttributeInstanceOf('\\Redis\\Client\\Adapter\\NullSentinelClientAdapter', 'clientAdapter', $sentinel, 'The used redis client adapter can be swapped');
+        $sentinel = new Client($this->ipAddress, $this->port, new NullClientAdapter());
+        $this->assertAttributeInstanceOf('\\Redis\\Client\\Adapter\\NullClientAdapter', 'clientAdapter', $sentinel, 'The used redis client adapter can be swapped');
     }
 
     public function testSentinelRefusesTextAsAnInvalidPort()

@@ -3,11 +3,11 @@
 namespace Redis\Client\Adapter;
 
 use Redis\Client\Adapter\Predis\PredisClientFactory;
-use Redis\Client\SentinelClientAdapter;
+use Redis\Client\ClientAdapter;
 
-class PredisSentinelClientAdapter
+class PredisClientAdapter
     extends AbstractSentinelClientAdapter
-    implements SentinelClientAdapter
+    implements ClientAdapter
 {
     /**
      * @var \Predis\Client
@@ -41,7 +41,6 @@ class PredisSentinelClientAdapter
 
     public function getMaster()
     {
-        $masterRedisParameters = array();
-        return $this->predisClientFactory->createRedisClient($masterRedisParameters);
+        return new \Redis\Client($this->ipAddress, $this->port, new PredisClientAdapter($this->predisClientFactory));
     }
 } 

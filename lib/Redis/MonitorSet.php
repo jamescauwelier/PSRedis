@@ -2,9 +2,12 @@
 
 namespace Redis;
 
+use Redis\Client\BackoffStrategy\None;
+use Redis\Client\BackoffStrategy;
 use Redis\Exception\ConfigurationError;
 use Redis\Exception\ConnectionError;
 use Redis\Exception\InvalidProperty;
+use Redis\Exception\RoleError;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Validation;
 
@@ -25,7 +28,12 @@ class MonitorSet
     /**
      * @var Client[]
      */
-    private $nodes = array();
+    private $sentinels = array();
+
+    /**
+     * @var Client\BackoffStrategy\None
+     */
+    private $backoffStrategy;
 
     /**
      * @param string $name
@@ -34,6 +42,14 @@ class MonitorSet
     {
         $this->guardThatTheNameIsNotBlank($name);
         $this->name = $name;
+
+        // by default we don't implement a backoff
+        $this->backoffStrategy = new None();
+    }
+
+    public function setBackoffStrategy(BackoffStrategy $backoffStrategy)
+    {
+        $this->backoffStrategy = $backoffStrategy;
     }
 
     /**
@@ -44,14 +60,14 @@ class MonitorSet
         return $this->name;
     }
 
-    public function addNode(Client $node)
+    public function addSentinel(Client $sentinelClient)
     {
-        $this->nodes[] = $node;
+        $this->sentinels[] = $sentinelClient;
     }
 
-    public function getNodes()
+    public function getSentinels()
     {
-        return \SplFixedArray::fromArray($this->nodes);
+        return \SplFixedArray::fromArray($this->sentinels);
     }
 
     /**
@@ -68,28 +84,42 @@ class MonitorSet
     }
 
     /**
-     * @return Client\SentinelClientAdapter
+     * @return Client\ClientAdapter
      * @throws Exception\ConnectionError
      * @throws Exception\ConfigurationError
      */
     public function getMaster()
     {
-        if ($this->getNodes()->count() == 0) {
+        if ($this->getSentinels()->count() == 0) {
             throw new ConfigurationError('You need to configure and add sentinel nodes before attempting to fetch a master');
         }
 
-        foreach ($this->getNodes() as $sentinelClient) {
-            /** @var $sentinelClient Client */
+        do {
+
             try {
-                $sentinelClient->connect();
-                $redisClient = $sentinelClient->getMaster();
-                if ($redisClient->isMaster()) {
-                    return $redisClient;
+                foreach ($this->getSentinels() as $sentinelClient) {
+                    /** @var $sentinelClient Client */
+                    try {
+                        $sentinelClient->connect();
+                        $redisClient = $sentinelClient->getMaster();
+                        if ($redisClient->isMaster()) {
+                            return $redisClient;
+                        } else {
+                            throw new RoleError('Only a node with role master may be returned (maybe the master was stepping down during connection?)');
+                        }
+                    } catch (ConnectionError $e) {
+                        // on error, try to connect to next sentinel
+                    }
                 }
-            } catch (ConnectionError $e) {
-                // on error, try to connect to next node
+            } catch (RoleError $e) {
+
+                if ($this->backoffStrategy->shouldWeTryAgain()) {
+                    usleep($this->backoffStrategy->getBackoffInMicroSeconds());
+                } else {
+                    throw $e;
+                }
             }
-        }
+        } while ($this->backoffStrategy->shouldWeTryAgain());
 
         throw new ConnectionError('All sentinels are unreachable');
     }
