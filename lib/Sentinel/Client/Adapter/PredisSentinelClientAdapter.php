@@ -17,9 +17,7 @@ class PredisSentinelClientAdapter
 
     public function connect()
     {
-        $this->predisClient = new \Predis\Client($this->getPredisClientParameters());
-        $this->predisClient->getProfile()->createCommand(new GetMasterAddressCommand());
-        $this->predisClient->getProfile()->createCommand(new RoleCommand());
+        $this->createSentinelClient();
     }
 
     private function getPredisClientParameters()
@@ -28,6 +26,17 @@ class PredisSentinelClientAdapter
             'scheme'    => 'tcp',
             'host'      => $this->ipAddress,
             'port'      => $this->port,
+        );
+    }
+
+    private function createSentinelClient()
+    {
+        $this->predisClient = new \Predis\Client($this->getPredisClientParameters());
+        $this->predisClient->getProfile()->defineCommand(
+            'getmasteraddress', '\\Sentinel\\Client\\Adapter\\Predis\\Command\\GetMasterAddressCommand'
+        );
+        $this->predisClient->getProfile()->defineCommand(
+            'role', '\\Sentinel\\Client\\Adapter\\Predis\\Command\\RoleCommand'
         );
     }
 } 
