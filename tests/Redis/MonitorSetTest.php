@@ -2,9 +2,9 @@
 
 namespace Redis;
 
-require_once __DIR__.'/Client/Adapter/Predis/MockedPredisClientCreator.php';
+require_once __DIR__ . '/Client/Adapter/Predis/Mock/MockedPredisClientCreatorWithNoMasterAddress.php';
 
-use Redis\Client\Adapter\Predis\MockedPredisClientCreator;
+use Redis\Client\Adapter\Predis\Mock\MockedPredisClientCreatorWithNoMasterAddress;
 use Redis\Client\BackoffStrategy\Incremental;
 use Redis\Exception\ConnectionError;
 use Redis\Client\Adapter\PredisClientAdapter;
@@ -30,19 +30,20 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
      */
     private function mockOnlineSentinel()
     {
-        $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreator());
+        $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreatorWithNoMasterAddress(), Client::TYPE_SENTINEL);
 
         $redisClient = \Phake::mock('\\Redis\Client');
         \Phake::when($redisClient)->getIpAddress()->thenReturn($this->onlineMasterIpAddress);
         \Phake::when($redisClient)->getPort()->thenReturn($this->onlineMasterPort);
         \Phake::when($redisClient)->isMaster()->thenReturn(true);
+        \Phake::when($redisClient)->getRole()->thenReturn(Client::ROLE_MASTER);
 
         $sentinelClient = \Phake::mock('\\Redis\\Client');
         \Phake::when($sentinelClient)->connect()->thenReturn(null);
         \Phake::when($sentinelClient)->getIpAddress()->thenReturn($this->onlineSentinelIpAddress);
         \Phake::when($sentinelClient)->getPort()->thenReturn($this->onlineSentinelPort);
         \Phake::when($sentinelClient)->getClientAdapter()->thenReturn($clientAdapter);
-        \Phake::when($sentinelClient)->getMaster()->thenReturn($redisClient);
+        \Phake::when($sentinelClient)->getMaster(\Phake::anyParameters())->thenReturn($redisClient);
 
         return $sentinelClient;
     }
@@ -64,7 +65,7 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
 
     private function mockOnlineSentinelWithMasterSteppingDown()
     {
-        $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreator());
+        $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreatorWithNoMasterAddress(), Client::TYPE_SENTINEL);
 
         $masterNodeSteppingDown = \Phake::mock('\\Redis\Client');
         \Phake::when($masterNodeSteppingDown)->getIpAddress()->thenReturn($this->onlineSteppingDownMasterIpAddress);
@@ -81,7 +82,7 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
         \Phake::when($sentinelClient)->getIpAddress()->thenReturn($this->onlineSentinelIpAddress);
         \Phake::when($sentinelClient)->getPort()->thenReturn($this->onlineSentinelPort);
         \Phake::when($sentinelClient)->getClientAdapter()->thenReturn($clientAdapter);
-        \Phake::when($sentinelClient)->getMaster()
+        \Phake::when($sentinelClient)->getMaster(\Phake::anyParameters())
             ->thenReturn($masterNodeSteppingDown)
             ->thenReturn($masterNode);
 
@@ -179,6 +180,23 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals($this->onlineMasterIpAddress, $masterNode->getIpAddress(), 'A master that stepped down between discovery and connecting should be retried after backoff (check IP address)');
         $this->assertEquals($this->onlineMasterPort, $masterNode->getPort(), 'A master that stepped down between discovery and connecting should be retried after backoff (check port)');
+    }
+
+    public function testThatTheMasterHasTheCorrectRole()
+    {
+        $noBackoff = new Incremental(0, 1);
+        $noBackoff->setMaxAttempts(1);
+
+        $sentinel1 = $this->mockOfflineSentinel();
+        $sentinel2 = $this->mockOnlineSentinel();
+
+        $monitorSet = new MonitorSet('online-sentinel');
+        $monitorSet->setBackoffStrategy($noBackoff);
+        $monitorSet->addSentinel($sentinel1);
+        $monitorSet->addSentinel($sentinel2);
+        $masterNode = $monitorSet->getMaster();
+
+        $this->assertEquals(Client::ROLE_MASTER, $masterNode->getRole(), 'The role of the master should be \'master\'');
     }
 }
  

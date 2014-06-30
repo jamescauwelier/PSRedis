@@ -101,8 +101,8 @@ class MonitorSet
                     /** @var $sentinelClient Client */
                     try {
                         $sentinelClient->connect();
-                        $redisClient = $sentinelClient->getMaster();
-                        if ($redisClient->isMaster()) {
+                        $redisClient = $sentinelClient->getMaster($this->getName());
+                        if (!empty($redisClient) AND $redisClient->isMaster()) {
                             return $redisClient;
                         } else {
                             throw new RoleError('Only a node with role master may be returned (maybe the master was stepping down during connection?)');

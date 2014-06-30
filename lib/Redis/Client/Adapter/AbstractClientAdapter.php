@@ -2,7 +2,7 @@
 
 namespace Redis\Client\Adapter;
 
-abstract class AbstractSentinelClientAdapter
+abstract class AbstractClientAdapter
 {
     protected $ipAddress;
 

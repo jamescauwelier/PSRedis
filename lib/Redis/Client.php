@@ -30,10 +30,16 @@ class Client
      */
     private $port;
 
-
     private $clientAdapter;
 
-    public function __construct($ipAddress, $port, ClientAdapter $uninitializedClientAdapter = null)
+    const TYPE_SENTINEL = 'sentinel';
+    const TYPE_REDIS    = 'redis';
+
+    const ROLE_SENTINEL = 'sentinel';
+    const ROLE_MASTER   = 'master';
+    const ROLE_SLAVE    = 'slave';
+
+    public function __construct($ipAddress, $port, ClientAdapter $uninitializedClientAdapter = null, $connectionType = self::TYPE_SENTINEL)
     {
         $this->guardThatIpAddressFormatIsValid($ipAddress);
         $this->guardThatServerPortIsValid($port);
@@ -42,7 +48,7 @@ class Client
         $this->port = $port;
 
         if (empty($uninitializedClientAdapter)) {
-            $uninitializedClientAdapter = new PredisClientAdapter(new PredisClientCreator());
+            $uninitializedClientAdapter = new PredisClientAdapter(new PredisClientCreator(), $connectionType);
         }
         $this->clientAdapter = $this->initializeClientAdapter($uninitializedClientAdapter);
     }
@@ -116,9 +122,14 @@ class Client
     /**
      * @return \Redis\Client
      */
-    public function getMaster()
+    public function getMaster($nameOfNodeSet)
     {
-        return $this->clientAdapter->getMaster();
+        return $this->clientAdapter->getMaster($nameOfNodeSet);
+    }
+
+    public function getRole()
+    {
+        return $this->clientAdapter->getRole();
     }
 
     public function isMaster()

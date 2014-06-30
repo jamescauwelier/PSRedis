@@ -6,11 +6,14 @@ namespace Redis\Client\Adapter\Predis\Command;
 
 use Predis\Command\AbstractCommand;
 
-class GetMasterAddressCommand
+class SentinelCommand
     extends AbstractCommand
 {
+    const GETMASTER = 'get-master-addr-by-name';
+    const GETSLAVES = 'slaves';
+
     public function getId()
     {
-        return 'SENTINEL get-master-addr-by-name';
+        return 'SENTINEL';
     }
 } 

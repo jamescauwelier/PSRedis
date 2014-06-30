@@ -8,5 +8,6 @@ interface ClientAdapter {
     public function setPort($port);
     public function connect();
     public function isConnected();
-    public function getMaster();
+    public function getMaster($nameOfNodeSet);
+    public function getRole();
 } 
