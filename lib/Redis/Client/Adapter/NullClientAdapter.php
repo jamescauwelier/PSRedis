@@ -3,6 +3,7 @@
 namespace Redis\Client\Adapter;
 
 use Redis\Client\ClientAdapter;
+use Redis\Client;
 
 /**
  * Class NullSentinelClientAdapter
@@ -14,7 +15,7 @@ use Redis\Client\ClientAdapter;
  * @package Sentinel\Client\Adapter
  */
 class NullClientAdapter
-    extends AbstractSentinelClientAdapter
+    extends AbstractClientAdapter
     implements ClientAdapter
 {
 
@@ -23,8 +24,13 @@ class NullClientAdapter
         $this->isConnected = true;
     }
 
-    public function getMaster()
+    public function getMaster($nameOfNodeSet)
     {
-        return new \StdClass();
+        return new Client('127.0.0.1', 2020);
+    }
+
+    public function getRole()
+    {
+        return Client::ROLE_SENTINEL;
     }
 }

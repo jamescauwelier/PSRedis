@@ -2,11 +2,14 @@
 
 namespace Redis\Client\Adapter;
 
+use Redis\Client\Adapter\Predis\Command\SentinelCommand;
 use Redis\Client\Adapter\Predis\PredisClientFactory;
 use Redis\Client\ClientAdapter;
+use Redis\Client;
+use Redis\Exception\SentinelError;
 
 class PredisClientAdapter
-    extends AbstractSentinelClientAdapter
+    extends AbstractClientAdapter
     implements ClientAdapter
 {
     /**
@@ -19,14 +22,17 @@ class PredisClientAdapter
      */
     private $predisClientFactory;
 
-    public function __construct(PredisClientFactory $clientFactory)
+    private $clientType;
+
+    public function __construct(PredisClientFactory $clientFactory, $clientType)
     {
         $this->predisClientFactory = $clientFactory;
+        $this->clientType = $clientType;
     }
 
     public function connect()
     {
-        $this->predisClient = $this->predisClientFactory->createSentinelClient($this->getPredisClientParameters());
+        $this->predisClient = $this->predisClientFactory->createClient($this->clientType, $this->getPredisClientParameters());
         $this->predisClient->connect();
     }
 
@@ -39,8 +45,19 @@ class PredisClientAdapter
         );
     }
 
-    public function getMaster()
+    public function getMaster($nameOfNodeSet)
     {
-        return new \Redis\Client($this->ipAddress, $this->port, new PredisClientAdapter($this->predisClientFactory));
+        list($masterIpAddress, $masterPort) = $this->predisClient->sentinel(SentinelCommand::GETMASTER, $nameOfNodeSet);
+
+        if (!empty($masterIpAddress) AND !empty($masterPort)) {
+            return new \Redis\Client($masterIpAddress, $masterPort, new PredisClientAdapter($this->predisClientFactory, Client::TYPE_REDIS));
+        }
+
+        throw new SentinelError('The sentinel does not know the master address');
     }
-} 
+
+    public function getRole()
+    {
+        return $this->predisClient->role();
+    }
+}

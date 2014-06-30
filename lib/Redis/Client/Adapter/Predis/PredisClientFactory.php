@@ -11,15 +11,5 @@ namespace Redis\Client\Adapter\Predis;
 
 interface PredisClientFactory
 {
-    /**
-     * @param array $parameters
-     * @return \Redis\Client
-     */
-    public function createSentinelClient(array $parameters = array());
-
-    /**
-     * @param array $parameters
-     * @return \Redis\Client
-     */
-    public function createRedisClient(array $parameters = array());
+    public function createClient($clientType, array $parameters = array());
 } 
