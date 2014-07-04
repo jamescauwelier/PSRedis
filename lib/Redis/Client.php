@@ -134,6 +134,16 @@ class Client
 
     public function isMaster()
     {
-        return false;
+        return $this->getRole() === Client::ROLE_MASTER;
+    }
+
+    public function isSentinel()
+    {
+        return $this->getRole() === Client::ROLE_SENTINEL;
+    }
+
+    public function isSlave()
+    {
+        return $this->getRole() === Client::ROLE_SLAVE;
     }
 } 

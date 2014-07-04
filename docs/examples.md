@@ -14,6 +14,8 @@ $monitor->addNode($sentinel3);
 
 try {
     $redisConnection = $monitor->getMaster()->connect();
+    $redisConnection->set('kyename', 'value');
+    $redisConenction->get('keyname');
 } catch (\Exception $e ) {
     die('something wrong');
 }
