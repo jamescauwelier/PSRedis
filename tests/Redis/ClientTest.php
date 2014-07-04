@@ -29,6 +29,35 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         return $redisClientAdapter;
     }
 
+    private function mockClientAdapterForMaster($masterClient = null)
+    {
+        return $this->mockClientAdapterForRole(Client::ROLE_MASTER, $masterClient);
+    }
+
+    private function mockClientAdapterForSlave($slaveClient = null)
+    {
+        return $this->mockClientAdapterForRole(Client::ROLE_SLAVE, $slaveClient);
+    }
+
+    private function mockClientAdapterForSentinel($sentinelClient = null)
+    {
+        return $this->mockClientAdapterForRole(Client::ROLE_SENTINEL, $sentinelClient);
+    }
+
+    private function mockClientAdapterForRole($role, $client = null)
+    {
+        if (empty($client)) {
+            $client = \Phake::mock('\\Redis\\Client');
+        }
+
+        $redisClientAdapter = \Phake::mock('\\Redis\\Client\\Adapter\\PredisClientAdapter');
+        \Phake::when($redisClientAdapter)->isConnected()->thenReturn(true);
+        \Phake::when($redisClientAdapter)->getMaster('test')->thenReturn($client);
+        \Phake::when($redisClientAdapter)->getRole()->thenReturn($role);
+
+        return $redisClientAdapter;
+    }
+
     public function testSentinelHasIpAddress()
     {
         $sentinel = new Client($this->ipAddress, $this->port);
@@ -102,6 +131,48 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $onlineClientAdapter = $this->mockOnlineClientAdapter();
         $sentinelNode = new Client($this->ipAddress, $this->port, $onlineClientAdapter);
         $this->assertEquals($onlineClientAdapter, $sentinelNode->getClientAdapter(), 'A sentinel can return the client adapter');
+    }
+
+    public function testThatTheMasterReturnedComesFromClientAdapter()
+    {
+        $masterClient = \Phake::mock('\\Redis\\Client');
+        $masterClientAdapter = $this->mockClientAdapterForMaster($masterClient);
+        $masterNode = new Client($this->ipAddress, $this->port, $masterClientAdapter);
+        $this->assertEquals($masterClient, $masterNode->getMaster('test'), 'The redis client gets the master object from the client adapter');
+    }
+
+    public function testThatTheRoleReturnedComesFromClientAdapter()
+    {
+        $masterClientAdapter = $this->mockClientAdapterForMaster();
+        $masterNode = new Client($this->ipAddress, $this->port, $masterClientAdapter);
+        $this->assertEquals(Client::ROLE_MASTER, $masterNode->getRole(), 'The role of the node is provided by the client adapter');
+    }
+
+    public function testThatAMasterIsBeingIdentifiedAsOne()
+    {
+        $masterClientAdapter = $this->mockClientAdapterForMaster();
+        $masterNode = new Client($this->ipAddress, $this->port, $masterClientAdapter);
+        $this->assertTrue($masterNode->isMaster(), 'A master should be identified as master');
+        $this->assertFalse($masterNode->isSlave(), 'A master should not be identified as slave');
+        $this->assertFalse($masterNode->isSentinel(), 'A master should not be identified as sentinel');
+    }
+
+    public function testThatASentinelIsBeingIdentifiedAsOne()
+    {
+        $sentinelClientAdapter = $this->mockClientAdapterForSentinel();
+        $sentinelNode = new Client($this->ipAddress, $this->port, $sentinelClientAdapter);
+        $this->assertTrue($sentinelNode->isSentinel(), 'A sentinel should be identified as sentinel');
+        $this->assertFalse($sentinelNode->isSlave(), 'A sentinel should not be identified as slave');
+        $this->assertFalse($sentinelNode->isMaster(), 'A sentinel should not be identified as master');
+    }
+
+    public function testThatASlaveIsBeingIdentifiedAsOne()
+    {
+        $slaveClientAdapter = $this->mockClientAdapterForSlave();
+        $slaveNode = new Client($this->ipAddress, $this->port, $slaveClientAdapter);
+        $this->assertTrue($slaveNode->isSlave(), 'A slave should be identified as slave');
+        $this->assertFalse($slaveNode->isSentinel(), 'A slave should not be identified as sentinel');
+        $this->assertFalse($slaveNode->isMaster(), 'A slave should not be identified as master');
     }
 }
  
