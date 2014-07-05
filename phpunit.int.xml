@@ -2,8 +2,8 @@
 
 <phpunit bootstrap="tests/bootstrap.php" colors="true" strict="true">
     <testsuites>
-        <testsuite name="Redis sentinel">
-            <directory>tests/unit/Redis/</directory>
+        <testsuite name="Redis sentinel integration">
+            <directory>tests/integration/Redis/</directory>
         </testsuite>
     </testsuites>
 
