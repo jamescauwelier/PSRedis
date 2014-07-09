@@ -53,7 +53,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $redisClientAdapter = \Phake::mock('\\Redis\\Client\\Adapter\\PredisClientAdapter');
         \Phake::when($redisClientAdapter)->isConnected()->thenReturn(true);
         \Phake::when($redisClientAdapter)->getMaster('test')->thenReturn($client);
-        \Phake::when($redisClientAdapter)->getRole()->thenReturn($role);
+        \Phake::when($redisClientAdapter)->getRole()->thenReturn(array($role));
 
         return $redisClientAdapter;
     }
@@ -145,7 +145,14 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $masterClientAdapter = $this->mockClientAdapterForMaster();
         $masterNode = new Client($this->ipAddress, $this->port, $masterClientAdapter);
-        $this->assertEquals(Client::ROLE_MASTER, $masterNode->getRole(), 'The role of the node is provided by the client adapter');
+        $this->assertEquals(array(Client::ROLE_MASTER), $masterNode->getRole(), 'The role of the node is provided by the client adapter');
+    }
+
+    public function testThatTheRoleTypeReturnedComesFromClientAdapter()
+    {
+        $masterClientAdapter = $this->mockClientAdapterForMaster();
+        $masterNode = new Client($this->ipAddress, $this->port, $masterClientAdapter);
+        $this->assertEquals(Client::ROLE_MASTER, $masterNode->getRoleType(), 'The type of role of the node is provided by the client adapter');
     }
 
     public function testThatAMasterIsBeingIdentifiedAsOne()

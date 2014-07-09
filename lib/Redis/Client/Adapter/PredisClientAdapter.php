@@ -30,6 +30,18 @@ class PredisClientAdapter
         $this->clientType = $clientType;
     }
 
+    /**
+     * @return \Predis\Client
+     */
+    private function getPredisClient()
+    {
+        if (empty($this->predisClient)) {
+            $this->connect();
+        }
+
+        return $this->predisClient;
+    }
+
     public function connect()
     {
         $this->predisClient = $this->predisClientFactory->createClient($this->clientType, $this->getPredisClientParameters());
@@ -47,7 +59,7 @@ class PredisClientAdapter
 
     public function getMaster($nameOfNodeSet)
     {
-        list($masterIpAddress, $masterPort) = $this->predisClient->sentinel(SentinelCommand::GETMASTER, $nameOfNodeSet);
+        list($masterIpAddress, $masterPort) = $this->getPredisClient()->sentinel(SentinelCommand::GETMASTER, $nameOfNodeSet);
 
         if (!empty($masterIpAddress) AND !empty($masterPort)) {
             return new \Redis\Client($masterIpAddress, $masterPort, new PredisClientAdapter($this->predisClientFactory, Client::TYPE_REDIS));
@@ -58,6 +70,6 @@ class PredisClientAdapter
 
     public function getRole()
     {
-        return $this->predisClient->role();
+        return $this->getPredisClient()->role();
     }
 }
