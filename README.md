@@ -5,12 +5,12 @@ A PHP client for redis sentinel connections as a wrapper on other redis clients
 ## Installation
 
 The easiest way to install is by using composer.  The package is available on
-[packagist](https://packagist.org/packages/jamescauwelier/predis-sentinel) so installing should be as easy as putting
+[packagist](https://packagist.org/packages/sparkcentral/predis-sentinel) so installing should be as easy as putting
 the following in your composer file:
 
 ```
 "require": {
-    "jamescauwelier/predis-sentinel": "dev-master"
+    "sparkcentral/predis-sentinel": "dev-master"
 },
 ```
 
