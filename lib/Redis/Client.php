@@ -132,18 +132,24 @@ class Client
         return $this->clientAdapter->getRole();
     }
 
+    public function getRoleType()
+    {
+        $role = $this->getRole();
+        return $role[0];
+    }
+
     public function isMaster()
     {
-        return $this->getRole() === Client::ROLE_MASTER;
+        return $this->getRoleType() === Client::ROLE_MASTER;
     }
 
     public function isSentinel()
     {
-        return $this->getRole() === Client::ROLE_SENTINEL;
+        return $this->getRoleType() === Client::ROLE_SENTINEL;
     }
 
     public function isSlave()
     {
-        return $this->getRole() === Client::ROLE_SLAVE;
+        return $this->getRoleType() === Client::ROLE_SLAVE;
     }
 } 
