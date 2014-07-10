@@ -140,7 +140,9 @@ class Client
 
     public function isMaster()
     {
-        return $this->getRoleType() === Client::ROLE_MASTER;
+        // Doesn't work with Redis < 2.8.12
+        return true;
+        // return $this->getRoleType() === Client::ROLE_MASTER;
     }
 
     public function isSentinel()
