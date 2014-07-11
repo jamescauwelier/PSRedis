@@ -1,0 +1,6 @@
+description "sentinel server"
+
+start on runlevel [23]
+stop on shutdown
+
+exec sudo -u redis /usr/local/bin/redis-server /etc/redis/sentinel.conf --sentinel

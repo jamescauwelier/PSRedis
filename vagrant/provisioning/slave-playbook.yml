@@ -1,0 +1,63 @@
+- hosts: all
+
+  sudo: yes
+
+  vars:
+
+    redis_version:  2.8.12
+    master:
+      name:         integrationtests
+      ip:           192.168.50.40
+      port:         6379
+    sentinel:
+      port:         26379
+    slave:
+      port:         6379
+      of:
+        ip:         192.168.50.40
+        port:       6379
+
+  tasks:
+
+    - name: Download redis
+      get_url: url=http://download.redis.io/releases/redis-{{redis_version}}.tar.gz dest=/tmp
+
+    - name: Untar Redis
+      command: chdir=/tmp creates=redis-{{redis_version}} tar -xzf redis-{{redis_version}}.tar.gz
+
+    - name: Install Redis
+      command: creates=/usr/local/bin/redis-server chdir=/tmp/redis-{{redis_version}} make install
+
+    - name: Create user redis
+      user: name=redis system=yes home=/var/lib/redis shell=/bin/false
+
+    - name: Creates redis configuration directory
+      file: path=/etc/redis state=directory owner=redis
+
+    - name: Configure redis
+      template: src=files/conf/slave.j2 dest=/etc/redis/redis.conf owner=redis
+
+    - name: Configure sentinel
+      template: src=files/conf/sentinel.j2 dest=/etc/redis/sentinel.conf owner=redis
+
+    - name: Configure Upstart for Redis
+      template: src=files/upstart/redis.j2 dest=/etc/init/redis.conf
+      notify: Restart Redis
+
+    - name: Configure Upstart for Sentinel
+      template: src=files/upstart/sentinel.j2 dest=/etc/init/sentinel.conf
+      notify: Restart Sentinel
+
+    - name: Start Redis
+      service: name=redis state=started
+
+    - name: Start Sentinel
+      service: name=sentinel state=started
+
+  handlers:
+
+      - name: Restart Redis
+        service: name=redis state=restarted
+
+      - name: Restart Sentinel
+        service: name=sentinel state=restarted

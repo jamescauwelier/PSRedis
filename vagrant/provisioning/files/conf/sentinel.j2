@@ -1,0 +1,5 @@
+port {{ sentinel.port }}
+dir /var/lib/redis
+sentinel monitor {{ master.name }} {{ master.ip }} {{ master.port }} 2
+sentinel down-after-milliseconds {{ master.name }} 30000
+sentinel failover-timeout {{ master.name }} 180000
