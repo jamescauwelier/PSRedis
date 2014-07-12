@@ -32,6 +32,9 @@
     - name: Configure sentinel
       template: src=files/conf/sentinel.j2 dest=/etc/redis/sentinel.conf owner=redis
 
+    - name: configure example configuration for sentinel
+      template: src=files/conf/sentinel.j2 dest=/etc/redis/sentinel.example.conf owner=redis
+
     - name: Configure Upstart for Sentinel
       template: src=files/upstart/sentinel.j2 dest=/etc/init/sentinel.conf
       notify: Restart Sentinel

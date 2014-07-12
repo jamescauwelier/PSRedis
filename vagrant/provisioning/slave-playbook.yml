@@ -37,8 +37,14 @@
     - name: Configure redis
       template: src=files/conf/slave.j2 dest=/etc/redis/redis.conf owner=redis
 
+    - name: Copy example configuration for redis
+      template: src=files/conf/slave.j2 dest=/etc/redis/redis.example.conf owner=redis
+
     - name: Configure sentinel
       template: src=files/conf/sentinel.j2 dest=/etc/redis/sentinel.conf owner=redis
+
+    - name: configure example configuration for sentinel
+      template: src=files/conf/sentinel.j2 dest=/etc/redis/sentinel.example.conf owner=redis
 
     - name: Configure Upstart for Redis
       template: src=files/upstart/redis.j2 dest=/etc/init/redis.conf
