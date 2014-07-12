@@ -46,6 +46,7 @@ class PredisClientAdapter
     {
         $this->predisClient = $this->predisClientFactory->createClient($this->clientType, $this->getPredisClientParameters());
         $this->predisClient->connect();
+        $this->isConnected = $this->predisClient->isConnected();
     }
 
     private function getPredisClientParameters()
