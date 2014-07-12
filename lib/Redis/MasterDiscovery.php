@@ -12,13 +12,13 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Validation;
 
 /**
- * Class MonitorSet
+ * Class MasterDiscovery
  *
- * Represents a set of sentinel nodes that are monitoring a master with it's slaves
+ * Implements the logic to discover a master by making us of a collection of sentinel clients.
  *
  * @package Sentinel
  */
-class MonitorSet
+class MasterDiscovery
 {
     /**
      * @var string

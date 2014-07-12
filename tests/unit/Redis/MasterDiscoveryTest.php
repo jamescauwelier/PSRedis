@@ -9,7 +9,7 @@ use Redis\Client\BackoffStrategy\Incremental;
 use Redis\Exception\ConnectionError;
 use Redis\Client\Adapter\PredisClientAdapter;
 
-class MonitorSetTest extends \PHPUnit_Framework_TestCase
+class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
 {
     private $monitorSetName = 'name-of-monitor-set';
 
@@ -91,34 +91,34 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
 
     public function testAMonitorSetHasAName()
     {
-        $monitorSet = new MonitorSet($this->monitorSetName);
+        $monitorSet = new MasterDiscovery($this->monitorSetName);
         $this->assertEquals($this->monitorSetName, $monitorSet->getName(), 'A monitor set is identified by a name');
     }
 
     public function testAMonitorSetNameCannotBeEmpty()
     {
         $this->setExpectedException('\\Redis\\Exception\\InvalidProperty', 'A monitor set needs a valid name');
-        new MonitorSet('');
+        new MasterDiscovery('');
     }
 
     public function testThatSentinelClientsCanBeAddedToMonitorSets()
     {
-        $monitorSet = new MonitorSet($this->monitorSetName);
+        $monitorSet = new MasterDiscovery($this->monitorSetName);
         $monitorSet->addSentinel($this->mockOnlineSentinel());
         $this->assertAttributeCount(1, 'sentinels', $monitorSet, 'Sentinel node can be added to a monitor set');
     }
 
     public function testThatOnlySentinelClientObjectsCanBeAddedAsNode()
     {
-        $this->setExpectedException('\\PHPUnit_Framework_Error', 'Argument 1 passed to Redis\MonitorSet::addSentinel() must be an instance of Redis\Client');
-        $monitorSet = new MonitorSet($this->monitorSetName);
+        $this->setExpectedException('\\PHPUnit_Framework_Error', 'Argument 1 passed to Redis\MasterDiscovery::addSentinel() must be an instance of Redis\Client');
+        $monitorSet = new MasterDiscovery($this->monitorSetName);
         $monitorSet->addSentinel(new \StdClass());
     }
 
     public function testThatWeNeedNodesConfigurationToDiscoverAMaster()
     {
         $this->setExpectedException('\\Redis\\Exception\\ConfigurationError', 'You need to configure and add sentinel nodes before attempting to fetch a master');
-        $monitorSet = new MonitorSet($this->monitorSetName);
+        $monitorSet = new MasterDiscovery($this->monitorSetName);
         $monitorSet->getMaster();
     }
 
@@ -127,7 +127,7 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
         $this->setExpectedException('\\Redis\\Exception\\ConnectionError', 'All sentinels are unreachable');
         $sentinel1 = $this->mockOfflineSentinel();
         $sentinel2 = $this->mockOfflineSentinel();
-        $monitorSet = new MonitorSet('all-fail');
+        $monitorSet = new MasterDiscovery('all-fail');
         $monitorSet->addSentinel($sentinel1);
         $monitorSet->addSentinel($sentinel2);
         $monitorSet->getMaster();
@@ -141,7 +141,7 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
         $sentinel1 = $this->mockOfflineSentinel();
         $sentinel2 = $this->mockOnlineSentinel();
 
-        $monitorSet = new MonitorSet('online-sentinel');
+        $monitorSet = new MasterDiscovery('online-sentinel');
         $monitorSet->setBackoffStrategy($noBackoff);
         $monitorSet->addSentinel($sentinel1);
         $monitorSet->addSentinel($sentinel2);
@@ -158,7 +158,7 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
 
         $sentinel1 = $this->mockOnlineSentinelWithMasterSteppingDown();
         $sentinel2 = $this->mockOnlineSentinel();
-        $monitorSet = new MonitorSet('online-sentinel');
+        $monitorSet = new MasterDiscovery('online-sentinel');
         $monitorSet->addSentinel($sentinel1);
         $monitorSet->addSentinel($sentinel2);
         $monitorSet->getMaster();
@@ -172,7 +172,7 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
         $sentinel1 = $this->mockOfflineSentinel();
         $sentinel2 = $this->mockOnlineSentinelWithMasterSteppingDown();
 
-        $monitorSet = new MonitorSet('online-sentinel');
+        $monitorSet = new MasterDiscovery('online-sentinel');
         $monitorSet->setBackoffStrategy($backoffOnce);
         $monitorSet->addSentinel($sentinel1);
         $monitorSet->addSentinel($sentinel2);
@@ -190,7 +190,7 @@ class MonitorSetTest extends \PHPUnit_Framework_TestCase
         $sentinel1 = $this->mockOfflineSentinel();
         $sentinel2 = $this->mockOnlineSentinel();
 
-        $monitorSet = new MonitorSet('online-sentinel');
+        $monitorSet = new MasterDiscovery('online-sentinel');
         $monitorSet->setBackoffStrategy($noBackoff);
         $monitorSet->addSentinel($sentinel1);
         $monitorSet->addSentinel($sentinel2);
