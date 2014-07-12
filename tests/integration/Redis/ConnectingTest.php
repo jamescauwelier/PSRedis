@@ -6,6 +6,11 @@ namespace Redis;
 
 class ConnectingTest extends Redis_Integration_TestCase
 {
+    public function setUp()
+    {
+        $this->initializeReplicationSet();
+    }
+
     public function testThatWeCanConnectToSentinelsAndInspectTheirRole()
     {
         $sentinel1 = new Client('192.168.50.40', '26379');
