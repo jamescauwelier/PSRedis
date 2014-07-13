@@ -6,6 +6,7 @@ namespace Redis\Client\Adapter;
 
 use Redis\Client\Adapter\Predis\Mock\MockedPredisClientCreatorWithMasterAddress;
 use Redis\Client\Adapter\Predis\Mock\MockedPredisClientCreatorWithNoMasterAddress;
+use Redis\Client\Adapter\Predis\Mock\MockedPredisClientCreatorWithSentinelOffline;
 use Redis\Client;
 
 class PredisClientAdapterTest extends \PHPUnit_Framework_TestCase
@@ -25,10 +26,19 @@ class PredisClientAdapterTest extends \PHPUnit_Framework_TestCase
         $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreatorWithMasterAddress(), Client::TYPE_SENTINEL);
         $clientAdapter->setIpAddress('127.0.0.1');
         $clientAdapter->setPort(4545);
-        $clientAdapter->connect();
         $master = $clientAdapter->getMaster('test');
 
         $this->assertInstanceOf('\\Redis\\Client', $master, 'The master returned should be of type \\Redis\\Client');
+    }
+
+    public function testThatConnectionToAnOfflineSentinelThrowsAnException()
+    {
+        $this->setExpectedException('\\Redis\\Exception\\ConnectionError');
+
+        $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreatorWithSentinelOffline(), Client::TYPE_SENTINEL);
+        $clientAdapter->setIpAddress('127.0.0.1');
+        $clientAdapter->setPort(4545);
+        $clientAdapter->connect();
     }
 
     public function testThatExceptionIsThrownWhenMasterIsUnknownToSentinel()
@@ -38,7 +48,7 @@ class PredisClientAdapterTest extends \PHPUnit_Framework_TestCase
         $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreatorWithNoMasterAddress(), Client::TYPE_SENTINEL);
         $clientAdapter->setIpAddress('127.0.0.1');
         $clientAdapter->setPort(4545);
-        $clientAdapter->connect();
+
         $clientAdapter->getMaster('test');
     }
 
@@ -47,7 +57,6 @@ class PredisClientAdapterTest extends \PHPUnit_Framework_TestCase
         $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreatorWithMasterAddress(), Client::TYPE_SENTINEL);
         $clientAdapter->setIpAddress('127.0.0.1');
         $clientAdapter->setPort(4545);
-        $clientAdapter->connect();
 
         $this->assertEquals('sentinel', $clientAdapter->getRole(), 'The server we are connected to is a sentinel');
     }

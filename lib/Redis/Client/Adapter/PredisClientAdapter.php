@@ -2,10 +2,12 @@
 
 namespace Redis\Client\Adapter;
 
+use Predis\Connection\ConnectionException;
 use Redis\Client\Adapter\Predis\Command\SentinelCommand;
 use Redis\Client\Adapter\Predis\PredisClientFactory;
 use Redis\Client\ClientAdapter;
 use Redis\Client;
+use Redis\Exception\ConnectionError;
 use Redis\Exception\SentinelError;
 
 class PredisClientAdapter
@@ -44,8 +46,13 @@ class PredisClientAdapter
 
     public function connect()
     {
-        $this->predisClient = $this->predisClientFactory->createClient($this->clientType, $this->getPredisClientParameters());
-        $this->predisClient->connect();
+        try {
+            $this->predisClient = $this->predisClientFactory->createClient($this->clientType, $this->getPredisClientParameters());
+            $this->predisClient->connect();
+            $this->isConnected = $this->predisClient->isConnected();
+        } catch (ConnectionException $e) {
+            throw new ConnectionError($e->getMessage());
+        }
     }
 
     private function getPredisClientParameters()

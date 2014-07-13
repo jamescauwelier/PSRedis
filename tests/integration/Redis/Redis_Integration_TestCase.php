@@ -86,4 +86,16 @@ class Redis_Integration_TestCase extends \PHPUnit_Framework_TestCase
 
         return $this->sentinelSshConnection;
     }
-} 
+
+    protected function disableSentinelAt($ipAddress)
+    {
+        $sshConnection = new VagrantSsh($ipAddress);
+        $sshConnection->execute('sudo stop sentinel');
+    }
+
+    protected function enableSentinelAt($ipAddress)
+    {
+        $sshConnection = new VagrantSsh($ipAddress);
+        $sshConnection->execute('sudo start sentinel');
+    }
+}
