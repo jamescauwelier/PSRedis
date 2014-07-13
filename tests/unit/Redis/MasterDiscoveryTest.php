@@ -23,6 +23,8 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
     private $offlineSentinelIpAddress = '127.0.0.1';
     private $offlineSentinelPort = 2323;
 
+    private $observedBackoff = false;
+
     /**
      * @return \Redis\Client
      */
@@ -195,6 +197,31 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
         $masterNode = $monitorSet->getMaster();
 
         $this->assertEquals(Client::ROLE_MASTER, $masterNode->getRole(), 'The role of the master should be \'master\'');
+    }
+
+    public function testThatAnObserverIsCalledOnBackoff()
+    {
+        $this->observedBackoff = false;
+
+        $backoffOnce = new Incremental(0, 1);
+        $backoffOnce->setMaxAttempts(2);
+
+        $sentinel1 = $this->mockOfflineSentinel();
+        $sentinel2 = $this->mockOnlineSentinelWithMasterSteppingDown();
+
+        $monitorSet = new MasterDiscovery('online-sentinel');
+        $monitorSet->setBackoffStrategy($backoffOnce);
+        $monitorSet->addSentinel($sentinel1);
+        $monitorSet->addSentinel($sentinel2);
+        $monitorSet->setBackoffObserver(array($this, 'backoffObserver'));
+        $monitorSet->getMaster();
+
+        $this->assertTrue($this->observedBackoff, 'When backing off an observer can be called');
+    }
+
+    public function backoffObserver()
+    {
+        $this->observedBackoff = true;
     }
 }
  

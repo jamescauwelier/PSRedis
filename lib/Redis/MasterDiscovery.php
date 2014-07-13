@@ -37,6 +37,11 @@ class MasterDiscovery
     private $backoffStrategy;
 
     /**
+     * @var callable
+     */
+    private $backoffObserver;
+
+    /**
      * @param string $name
      */
     public function __construct($name)
@@ -119,11 +124,23 @@ class MasterDiscovery
             }
 
             if ($this->backoffStrategy->shouldWeTryAgain()) {
-                usleep($this->backoffStrategy->getBackoffInMicroSeconds());
+                $backoffInMicroseconds = $this->backoffStrategy->getBackoffInMicroSeconds();
+                if (!empty($this->backoffObserver)) {
+                    call_user_func($this->backoffObserver, $backoffInMicroseconds);
+                }
+                usleep($backoffInMicroseconds);
             }
 
         } while ($this->backoffStrategy->shouldWeTryAgain());
 
         throw new ConnectionError('All sentinels are unreachable');
+    }
+
+    /**
+     * @param callable $observer
+     */
+    public function setBackoffObserver (callable $observer)
+    {
+        $this->backoffObserver = $observer;
     }
 } 
