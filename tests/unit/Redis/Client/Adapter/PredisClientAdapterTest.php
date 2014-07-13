@@ -25,7 +25,6 @@ class PredisClientAdapterTest extends \PHPUnit_Framework_TestCase
         $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreatorWithMasterAddress(), Client::TYPE_SENTINEL);
         $clientAdapter->setIpAddress('127.0.0.1');
         $clientAdapter->setPort(4545);
-        $clientAdapter->connect();
         $master = $clientAdapter->getMaster('test');
 
         $this->assertInstanceOf('\\Redis\\Client', $master, 'The master returned should be of type \\Redis\\Client');
@@ -38,7 +37,6 @@ class PredisClientAdapterTest extends \PHPUnit_Framework_TestCase
         $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreatorWithNoMasterAddress(), Client::TYPE_SENTINEL);
         $clientAdapter->setIpAddress('127.0.0.1');
         $clientAdapter->setPort(4545);
-        $clientAdapter->connect();
         $clientAdapter->getMaster('test');
     }
 
@@ -47,7 +45,6 @@ class PredisClientAdapterTest extends \PHPUnit_Framework_TestCase
         $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreatorWithMasterAddress(), Client::TYPE_SENTINEL);
         $clientAdapter->setIpAddress('127.0.0.1');
         $clientAdapter->setPort(4545);
-        $clientAdapter->connect();
 
         $this->assertEquals('sentinel', $clientAdapter->getRole(), 'The server we are connected to is a sentinel');
     }
