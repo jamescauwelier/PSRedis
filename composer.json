@@ -19,7 +19,8 @@
     },
     "require-dev": {
         "phpunit/phpunit": "~3.7",
-        "phake/phake": "@stable"
+        "phake/phake": "@stable",
+        "ext-pcntl": "*"
     },
     "autoload": {
         "psr-0": {"Sentinel": "lib/", "Redis": "lib/"}
