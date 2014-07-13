@@ -11,6 +11,7 @@
             "role": "Developer"
         }
     ],
+    "license": "MIT",
     "require": {
         "php": ">=5.3.2",
         "predis/predis": ">=0.8",
