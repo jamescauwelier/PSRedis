@@ -8,6 +8,7 @@ use Redis\Exception\ConfigurationError;
 use Redis\Exception\ConnectionError;
 use Redis\Exception\InvalidProperty;
 use Redis\Exception\RoleError;
+use Redis\Exception\SentinelError;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Validation;
 
@@ -109,6 +110,8 @@ class MasterDiscovery
                         }
                     } catch (ConnectionError $e) {
                         // on error, try to connect to next sentinel
+                    } catch (SentinelError $e) {
+                        // when the sentinel throws an error, we try the next sentinel in the set
                     }
                 }
             } catch (RoleError $e) {
