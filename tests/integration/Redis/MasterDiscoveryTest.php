@@ -141,29 +141,7 @@ class MasterDiscoveryTest extends Redis_Integration_TestCase
         $incrementalBackoff = new Incremental(500, 1.5);
         $incrementalBackoff->setMaxAttempts(10);
         $masterDiscovery->setBackoffStrategy($incrementalBackoff);
-
-        // we need to fork off a child process in order to bring the sentinels back online while discovering the master
-        $processId = \pcntl_fork();
-        if ($processId == -1) {
-
-            throw new \Exception('could not fork to re-enable the sentinels');
-
-        } else if ($processId) {
-
-            pcntl_wait($childProcessStatus); //Protect against Zombie children
-
-        } else {
-
-            // forked off in a child process to re-enable the sentinels while discovering the master
-
-            $this->enableSentinelAt('192.168.50.40');
-            $this->enableSentinelAt('192.168.50.41');
-            $this->enableSentinelAt('192.168.50.30');
-
-            // making sure that we exit the child process!
-
-            exit();
-        }
+        $masterDiscovery->setBackoffObserver(array($this, 'enableAllSentinels'));
 
         // try to discover the master
         $master = $masterDiscovery->getMaster();
@@ -181,6 +159,13 @@ class MasterDiscoveryTest extends Redis_Integration_TestCase
         $this->assertAttributeEquals('192.168.50.40', 'ipAddress', $master, 'The master ip returned is correct');
         $this->assertAttributeEquals('6379', 'port', $master, 'The master ip returned is correct');
 
+    }
+
+    public function enableAllSentinels()
+    {
+        $this->enableSentinelAt('192.168.50.40');
+        $this->enableSentinelAt('192.168.50.41');
+        $this->enableSentinelAt('192.168.50.30');
     }
 
     public function testDiscoveryWithBackoffFailsWhenSentinelsStayOffline()
