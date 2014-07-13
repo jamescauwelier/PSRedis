@@ -6,6 +6,7 @@ namespace Redis\Client\Adapter;
 
 use Redis\Client\Adapter\Predis\Mock\MockedPredisClientCreatorWithMasterAddress;
 use Redis\Client\Adapter\Predis\Mock\MockedPredisClientCreatorWithNoMasterAddress;
+use Redis\Client\Adapter\Predis\Mock\MockedPredisClientCreatorWithSentinelOffline;
 use Redis\Client;
 
 class PredisClientAdapterTest extends \PHPUnit_Framework_TestCase
@@ -28,6 +29,16 @@ class PredisClientAdapterTest extends \PHPUnit_Framework_TestCase
         $master = $clientAdapter->getMaster('test');
 
         $this->assertInstanceOf('\\Redis\\Client', $master, 'The master returned should be of type \\Redis\\Client');
+    }
+
+    public function testThatConnectionToAnOfflineSentinelThrowsAnException()
+    {
+        $this->setExpectedException('\\Redis\\Exception\\ConnectionError');
+
+        $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreatorWithSentinelOffline(), Client::TYPE_SENTINEL);
+        $clientAdapter->setIpAddress('127.0.0.1');
+        $clientAdapter->setPort(4545);
+        $clientAdapter->connect();
     }
 
     public function testThatExceptionIsThrownWhenMasterIsUnknownToSentinel()

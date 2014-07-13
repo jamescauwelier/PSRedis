@@ -152,22 +152,6 @@ class MasterDiscoveryTest extends Redis_Integration_TestCase
 
             pcntl_wait($childProcessStatus); //Protect against Zombie children
 
-            // try to discover the master
-            $master = $masterDiscovery->getMaster();
-
-            // after master discovery, at least one sentinel is connected
-
-            $this->assertTrue(
-                (bool) ($sentinel1->isConnected() | $sentinel2->isConnected() | $sentinel3->isConnected()),
-                'At least one of the sentinels is back online'
-            );
-
-            // master discovery returned a client to the correct node
-
-            $this->assertInstanceOf('\\Redis\\Client', $master, 'Master is returned after successful master discovery');
-            $this->assertAttributeEquals('192.168.50.40', 'ipAddress', $master, 'The master ip returned is correct');
-            $this->assertAttributeEquals('6379', 'port', $master, 'The master ip returned is correct');
-
         } else {
 
             // forked off in a child process to re-enable the sentinels while discovering the master
@@ -180,6 +164,22 @@ class MasterDiscoveryTest extends Redis_Integration_TestCase
 
             exit();
         }
+
+        // try to discover the master
+        $master = $masterDiscovery->getMaster();
+
+        // after master discovery, at least one sentinel is connected
+
+        $this->assertTrue(
+            (bool) ($sentinel1->isConnected() | $sentinel2->isConnected() | $sentinel3->isConnected()),
+            'At least one of the sentinels is back online'
+        );
+
+        // master discovery returned a client to the correct node
+
+        $this->assertInstanceOf('\\Redis\\Client', $master, 'Master is returned after successful master discovery');
+        $this->assertAttributeEquals('192.168.50.40', 'ipAddress', $master, 'The master ip returned is correct');
+        $this->assertAttributeEquals('6379', 'port', $master, 'The master ip returned is correct');
 
     }
 

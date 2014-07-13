@@ -2,8 +2,6 @@
 
 namespace Redis;
 
-require_once __DIR__ . '/Client/Adapter/Predis/Mock/MockedPredisClientCreatorWithNoMasterAddress.php';
-
 use Redis\Client\Adapter\Predis\Mock\MockedPredisClientCreatorWithNoMasterAddress;
 use Redis\Client\BackoffStrategy\Incremental;
 use Redis\Exception\ConnectionError;

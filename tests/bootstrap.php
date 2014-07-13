@@ -9,3 +9,4 @@ require_once __DIR__.'/../vendor/autoload.php';
 require_once __DIR__ . '/unit/Redis/Client/Adapter/Predis/Mock/AbstractMockedPredisClientCreator.php';
 require_once __DIR__ . '/unit/Redis/Client/Adapter/Predis/Mock/MockedPredisClientCreatorWithNoMasterAddress.php';
 require_once __DIR__ . '/unit/Redis/Client/Adapter/Predis/Mock/MockedPredisClientCreatorWithMasterAddress.php';
+require_once __DIR__ . '/unit/Redis/Client/Adapter/Predis/Mock/MockedPredisClientCreatorWithSentinelOffline.php';
