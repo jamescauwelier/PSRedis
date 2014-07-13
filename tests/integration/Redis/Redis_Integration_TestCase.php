@@ -86,4 +86,9 @@ class Redis_Integration_TestCase extends \PHPUnit_Framework_TestCase
 
         return $this->sentinelSshConnection;
     }
+
+    protected function putFirstSentinelOffline()
+    {
+        $this->getMasterSshConnection()->execute('sudo stop sentinel');
+    }
 } 
