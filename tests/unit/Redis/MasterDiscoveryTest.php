@@ -154,7 +154,7 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
 
     public function testThatMasterStatusOfANodeIsCheckedAfterConnecting()
     {
-        $this->setExpectedException('\\Redis\\Exception\\RoleError', 'Only a node with role master may be returned (maybe the master was stepping down during connection?)');
+        $this->setExpectedException('\\Redis\\Exception\\ConnectionError', 'All sentinels are unreachable');
 
         $sentinel1 = $this->mockOnlineSentinelWithMasterSteppingDown();
         $sentinel2 = $this->mockOnlineSentinel();

@@ -115,13 +115,13 @@ class MasterDiscovery
                     }
                 }
             } catch (RoleError $e) {
-
-                if ($this->backoffStrategy->shouldWeTryAgain()) {
-                    usleep($this->backoffStrategy->getBackoffInMicroSeconds());
-                } else {
-                    throw $e;
-                }
+                // if the role of the node isn't what we expected it to be, then we assume the master was not found and we rely on backoff mechanisms
             }
+
+            if ($this->backoffStrategy->shouldWeTryAgain()) {
+                usleep($this->backoffStrategy->getBackoffInMicroSeconds());
+            }
+
         } while ($this->backoffStrategy->shouldWeTryAgain());
 
         throw new ConnectionError('All sentinels are unreachable');

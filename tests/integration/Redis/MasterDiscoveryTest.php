@@ -75,7 +75,7 @@ class MasterDiscoveryTest extends Redis_Integration_TestCase
         $this->assertAttributeEquals('6379', 'port', $master, 'The master ip returned is correct');
     }
 
-    public function testDiscoveryWithoutBackoffFailsWithSentinelsTemporarilyUnreachable()
+    public function testDiscoveryWithoutBackoffFailsWithSentinelsUnreachable()
     {
         $this->setExpectedException('\\Redis\\Exception\\ConnectionError', 'All sentinels are unreachable');
 
@@ -143,17 +143,30 @@ class MasterDiscoveryTest extends Redis_Integration_TestCase
         $masterDiscovery->setBackoffStrategy($incrementalBackoff);
 
         // we need to fork off a child process in order to bring the sentinels back online while discovering the master
-        $pid = \pcntl_fork();
-        if ($pid == -1) {
+        $processId = \pcntl_fork();
+        if ($processId == -1) {
 
             throw new \Exception('could not fork to re-enable the sentinels');
 
-        } else if ($pid) {
-            // we are the parent
-            pcntl_wait($status); //Protect against Zombie children
+        } else if ($processId) {
+
+            pcntl_wait($childProcessStatus); //Protect against Zombie children
 
             // try to discover the master
             $master = $masterDiscovery->getMaster();
+
+            // after master discovery, at least one sentinel is connected
+
+            $this->assertTrue(
+                (bool) ($sentinel1->isConnected() | $sentinel2->isConnected() | $sentinel3->isConnected()),
+                'At least one of the sentinels is back online'
+            );
+
+            // master discovery returned a client to the correct node
+
+            $this->assertInstanceOf('\\Redis\\Client', $master, 'Master is returned after successful master discovery');
+            $this->assertAttributeEquals('192.168.50.40', 'ipAddress', $master, 'The master ip returned is correct');
+            $this->assertAttributeEquals('6379', 'port', $master, 'The master ip returned is correct');
 
         } else {
 
@@ -168,13 +181,45 @@ class MasterDiscoveryTest extends Redis_Integration_TestCase
             exit();
         }
 
-
-
     }
 
     public function testDiscoveryWithBackoffFailsWhenSentinelsStayOffline()
     {
-        $this->markTestSkipped('todo');
+        $this->setExpectedException('\\Redis\\Exception\\ConnectionError', 'All sentinels are unreachable');
+
+        // disable sentinel on all nodes
+        $this->disableSentinelAt('192.168.50.40');
+        $this->disableSentinelAt('192.168.50.41');
+        $this->disableSentinelAt('192.168.50.30');
+
+        // we need a factory to create the clients
+        $clientFactory = new PredisClientCreator();
+
+        // we need an adapter for each sentinel client too!
+
+        $clientAdapter = new PredisClientAdapter($clientFactory, Client::TYPE_SENTINEL);
+        $sentinel1 = new Client('192.168.50.40', '26379', $clientAdapter);
+
+        $clientAdapter = new PredisClientAdapter($clientFactory, Client::TYPE_SENTINEL);
+        $sentinel2 = new Client('192.168.50.41', '26379', $clientAdapter);
+
+        $clientAdapter = new PredisClientAdapter($clientFactory, Client::TYPE_SENTINEL);
+        $sentinel3 = new Client('192.168.50.30', '26379', $clientAdapter);
+
+        // now we can start discovering where the master is
+
+        $masterDiscovery = new MasterDiscovery('integrationtests');
+        $masterDiscovery->addSentinel($sentinel1);
+        $masterDiscovery->addSentinel($sentinel2);
+        $masterDiscovery->addSentinel($sentinel3);
+
+        // configure a backoff strategy
+        $incrementalBackoff = new Incremental(500, 1.5);
+        $incrementalBackoff->setMaxAttempts(5);
+        $masterDiscovery->setBackoffStrategy($incrementalBackoff);
+
+        // try to discover the master
+        $master = $masterDiscovery->getMaster();
     }
 }
  
