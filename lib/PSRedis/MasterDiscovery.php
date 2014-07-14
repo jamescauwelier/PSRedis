@@ -15,28 +15,34 @@ use Symfony\Component\Validator\Validation;
 /**
  * Class MasterDiscovery
  *
- * Implements the logic to discover a master by making us of a collection of sentinel clients.
+ * Implements the logic to discover a master by connecting to and questioning a collection of sentinel clients
  *
- * @package Sentinel
+ * @package PSRedis
+ * @see http://redis.io/topics/sentinel-clients Official client requirements. Explains the different steps taken in master discovery.
  */
 class MasterDiscovery
 {
     /**
+     * The name of the set consisting of 1 master and  1 or more replicated slaves
      * @var string
      */
     private $name;
 
     /**
+     * The collection of sentinels to use when trying to discover the current master node
      * @var Client[]
      */
     private $sentinels = array();
 
     /**
+     * The strategy to use when none of the sentinels could be reached.  Should we try again or leave it at that?
      * @var Client\BackoffStrategy\None
      */
     private $backoffStrategy;
 
     /**
+     * The callable to be called when backing off during master discovery.  To be used for logging and making the
+     * code testable (See integration tests)
      * @var callable
      */
     private $backoffObserver;
@@ -53,6 +59,9 @@ class MasterDiscovery
         $this->backoffStrategy = new None();
     }
 
+    /**
+     * @param BackoffStrategy $backoffStrategy
+     */
     public function setBackoffStrategy(BackoffStrategy $backoffStrategy)
     {
         $this->backoffStrategy = $backoffStrategy;
@@ -66,17 +75,24 @@ class MasterDiscovery
         return $this->name;
     }
 
+    /**
+     * @param Client $sentinelClient
+     */
     public function addSentinel(Client $sentinelClient)
     {
         $this->sentinels[] = $sentinelClient;
     }
 
+    /**
+     * @return \SplFixedArray
+     */
     public function getSentinels()
     {
         return \SplFixedArray::fromArray($this->sentinels);
     }
 
     /**
+     * Validation method for the name of the sentinels and redis collection
      * @param $name
      * @throws Exception\InvalidProperty
      */
@@ -90,6 +106,7 @@ class MasterDiscovery
     }
 
     /**
+     * Actual discovery logic to find out the IP and port of the master node
      * @return Client\ClientAdapter
      * @throws Exception\ConnectionError
      * @throws Exception\ConfigurationError
@@ -121,6 +138,7 @@ class MasterDiscovery
                 }
             } catch (RoleError $e) {
                 // if the role of the node isn't what we expected it to be, then we assume the master was not found and we rely on backoff mechanisms
+                // we don't even try with the next sentinel, but pauze discovery altogether
             }
 
             if ($this->backoffStrategy->shouldWeTryAgain()) {

@@ -7,6 +7,13 @@ namespace PSRedis\Client\Adapter\Predis;
 use PSRedis\Client;
 use PSRedis\Exception\ConfigurationError;
 
+/**
+ * Class PredisClientCreator
+ *
+ * Factory to create the Predis clients that allow us to talk to Redis and Sentinel nodes.
+ *
+ * @package PSRedis\Client\Adapter\Predis
+ */
 class PredisClientCreator
     implements PredisClientFactory
 {
