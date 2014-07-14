@@ -97,7 +97,36 @@ $master = $masterDiscovery->getMaster();
 
 ## Testing
 
-For testing, we still use PHPUnit 3.7 due to a bug in PhpStorm not allowing us to run unit tests from our IDE.  See
+*Note:* For testing, we still use PHPUnit 3.7 due to a bug in PhpStorm not allowing us to run unit tests from our IDE.  See
 http://youtrack.jetbrains.com/issue/WI-21666
 
+### Unit testing
 
+We use [PHPUnit](https://github.com/sebastianbergmann/phpunit) for unit testing and [Phake](https://github.com/mlively/Phake) for mocking.  Both are installed using composer.  Running the unit tests can
+be done using the following command:
+
+```
+./vendor/bin/phpunit -c ./phpunit.xml --bootstrap ./tests/bootstrap.php
+```
+
+### Integration testing
+
+To run the integration tests, make sure you install [Vagrant](http://www.vagrantup.com).  We have used it together with
+[VirtualBox](https://www.virtualbox.org).
+
+The VM's are provisioned with [ansible](http://www.ansible.com/home).
+
+After installing all of these, execute the following in the project root to provision the machines:
+
+```
+vagrant up
+``
+
+After that, run the integration tests with
+
+```
+./vendor/bin/phpunit -c ./phpunit.int.xml --bootstrap ./tests/bootstrap.int.php
+```
+
+You will see some warnings that need to be fixed, but the tests themselves should all pass.  The warnings are a result
+of the reset of the environment just before every integration test.
