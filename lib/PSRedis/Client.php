@@ -14,9 +14,9 @@ use Symfony\Component\Validator\Validation;
 /**
  * Class Client
  *
- * Represents one single sentinel node and provides identification if we want to connect to it
+ * Represents one single sentinel or redis node and provides identification if we want to connect to it
  *
- * @package Sentinel
+ * @package PSRedis
  */
 class Client
 {

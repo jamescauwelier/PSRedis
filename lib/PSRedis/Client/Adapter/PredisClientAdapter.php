@@ -10,22 +10,39 @@ use PSRedis\Client;
 use PSRedis\Exception\ConnectionError;
 use PSRedis\Exception\SentinelError;
 
+/**
+ * Class PredisClientAdapter
+ *
+ * Adapts the PSRedis\Client objects to Predis
+ * @link
+ *
+ * @package PSRedis\Client\Adapter
+ */
 class PredisClientAdapter
     extends AbstractClientAdapter
     implements ClientAdapter
 {
     /**
+     * The Predis client to use when sending commands to the redis server
      * @var \Predis\Client
      */
     private $predisClient;
 
     /**
-     * @var \Redis\Client\Adapter\Predis\PredisClientFactory
+     * Factory allows us to mock the creation of the actual redis clients
+     * @var \PSRedis\Client\Adapter\Predis\PredisClientFactory
      */
     private $predisClientFactory;
 
+    /**
+     * @var string
+     */
     private $clientType;
 
+    /**
+     * @param PredisClientFactory $clientFactory
+     * @param $clientType string
+     */
     public function __construct(PredisClientFactory $clientFactory, $clientType)
     {
         $this->predisClientFactory = $clientFactory;
@@ -44,6 +61,12 @@ class PredisClientAdapter
         return $this->predisClient;
     }
 
+    /**
+     * Creates a connect to Redis or Sentinel using the Predis\Client object.  It proxies the connecting and converts
+     * specific client exceptions to more generic adapted ones in PSRedis
+     *
+     * @throws \PSRedis\Exception\ConnectionError
+     */
     public function connect()
     {
         try {
@@ -64,6 +87,14 @@ class PredisClientAdapter
         );
     }
 
+    /**
+     * Gets the master node information from a sentinel.  This will still attempt to execute the sentinel command if
+     * executed on a redis client, but it will not recognize the command when attempted.
+     *
+     * @param $nameOfNodeSet
+     * @return Client
+     * @throws \PSRedis\Exception\SentinelError
+     */
     public function getMaster($nameOfNodeSet)
     {
         list($masterIpAddress, $masterPort) = $this->getPredisClient()->sentinel(SentinelCommand::GETMASTER, $nameOfNodeSet);
@@ -75,6 +106,12 @@ class PredisClientAdapter
         throw new SentinelError('The sentinel does not know the master address');
     }
 
+    /**
+     * Inspects the role of the node we are currently connected to
+     *
+     * @see http://redis.io/commands/role
+     * @return mixed
+     */
     public function getRole()
     {
         return $this->getPredisClient()->role();

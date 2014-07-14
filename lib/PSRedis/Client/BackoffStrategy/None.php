@@ -6,6 +6,15 @@ namespace PSRedis\Client\BackoffStrategy;
 
 use PSRedis\Client\BackoffStrategy;
 
+/**
+ * Class None
+ *
+ * Makes use of the Incremental backoff strategy with pre-defined settings.  It allows you to make the backoff
+ * strategy more readable and explicit in your code instead of expressing yourself with integer and float
+ * configuration parameters
+ *
+ * @package PSRedis\Client\BackoffStrategy
+ */
 class None
     implements BackoffStrategy
 {
@@ -17,6 +26,9 @@ class None
         $this->incrementalStrategy->setMaxAttempts(0);
     }
 
+    /**
+     *
+     */
     public function reset()
     {
         $this->incrementalStrategy->reset();

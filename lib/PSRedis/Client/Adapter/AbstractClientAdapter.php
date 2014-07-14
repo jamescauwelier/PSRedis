@@ -2,6 +2,13 @@
 
 namespace PSRedis\Client\Adapter;
 
+/**
+ * Class AbstractClientAdapter
+ *
+ * Common functionality to other client adapters.
+ *
+ * @package PSRedis\Client\Adapter
+ */
 abstract class AbstractClientAdapter
 {
     protected $ipAddress;

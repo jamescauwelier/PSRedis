@@ -12,6 +12,11 @@ require_once __DIR__ . '/Redis_Integration_TestCase.php';
 
 class MasterDiscoveryTest extends Redis_Integration_TestCase
 {
+    public function setUp()
+    {
+        $this->initializeReplicationSet();
+    }
+
     public function testDiscoveryOfMasterSucceedsWithAMaster()
     {
         // we need a factory to create the clients
