@@ -3,13 +3,13 @@
 <phpunit bootstrap="tests/bootstrap.inc.php" colors="true" strict="true">
     <testsuites>
         <testsuite name="Redis sentinel integration">
-            <directory>tests/integration/Redis/</directory>
+            <directory>tests/integration/PSRedis/</directory>
         </testsuite>
     </testsuites>
 
     <filter>
         <whitelist>
-            <directory suffix=".php">lib/Redis/</directory>
+            <directory suffix=".php">lib/PSRedis/</directory>
         </whitelist>
     </filter>
 
