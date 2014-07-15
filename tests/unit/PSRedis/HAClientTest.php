@@ -4,6 +4,9 @@
 namespace PSRedis;
 
 
+use Predis\CommunicationException;
+use PSRedis\Exception\ConnectionError;
+
 class HAClientTest extends \PHPUnit_Framework_TestCase
 {
     public function testThatAnHAClientContainsADependencyOnMasterDiscovery()
@@ -31,12 +34,61 @@ class HAClientTest extends \PHPUnit_Framework_TestCase
 
     public function testThatAFailingRedisCommandsIsRetried()
     {
-        $this->markTestIncomplete('Todo');
+        // mock master node
+        $master = \Phake::mock('\\PSRedis\\Client');
+        \Phake::when($master)->get('test')
+            ->thenThrow(new ConnectionError())
+            ->thenReturn('ok');
+
+        // mock master discovery
+        $masterDiscovery = \Phake::mock('\\PSRedis\\MasterDiscovery');
+        \Phake::when($masterDiscovery)->getMaster()
+            ->thenReturn($master)
+            ->thenReturn($master);
+
+        // testing proxy
+        $haclient = new HAClient($masterDiscovery);
+        $this->assertEquals('ok', $haclient->get('test'), 'HAClient automatically retries on connection errors');
     }
 
     public function testThatOnlyConnectionErrorsAreTriggeringFailover()
     {
-        $this->markTestIncomplete('Todo');
+        $this->setExpectedException('\\Predis\\CommunicationException');
+
+        // mock master node
+        $master = \Phake::mock('\\PSRedis\\Client');
+        \Phake::when($master)->get('test')
+            ->thenThrow(\Phake::mock('\\Predis\\CommunicationException'))
+            ->thenReturn('ok');
+
+        // mock master discovery
+        $masterDiscovery = \Phake::mock('\\PSRedis\\MasterDiscovery');
+        \Phake::when($masterDiscovery)->getMaster()
+            ->thenReturn($master)
+            ->thenReturn($master);
+
+        // testing proxy
+        $haclient = new HAClient($masterDiscovery);
+        $haclient->get('test');
+    }
+
+    public function testThatInfiniteLoopsOfRetriesArePrevented()
+    {
+        $this->setExpectedException('\\PSRedis\\Exception\\ConnectionError');
+
+        // mock master node
+        $master = \Phake::mock('\\PSRedis\\Client');
+        \Phake::when($master)->get('test')
+            ->thenThrow(new ConnectionError());
+
+        // mock master discovery
+        $masterDiscovery = \Phake::mock('\\PSRedis\\MasterDiscovery');
+        \Phake::when($masterDiscovery)->getMaster()
+            ->thenReturn($master);
+
+        // testing proxy
+        $haclient = new HAClient($masterDiscovery);
+        $haclient->get('test');
     }
 
     public function testThatMultipleFailoversAreHandledSeparately()

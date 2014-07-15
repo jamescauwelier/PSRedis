@@ -3,6 +3,7 @@
 
 namespace PSRedis;
 use Predis\Connection\ConnectionException;
+use PSRedis\Exception\ConnectionError;
 
 /**
  * Class HAClient
@@ -35,55 +36,63 @@ class HAClient
         $this->masterDiscovery = $masterDiscovery;
     }
 
-    private function masterIsKnown()
+    /**
+     * Investigates whether we have already discovered where the master currently is to be found
+     *
+     * @return bool
+     */
+    private function masterIsUnknown()
     {
-        return !empty($this->master);
+        return empty($this->master);
     }
 
     /**
-     * Proxies calls to the master client
+     * Removes the current master after connection errors so that we are forced to start the discovery process again
+     * on the next command proxy
+     *
+     * @return void
+     */
+    private function invalidateMasterConnection()
+    {
+        $this->master = null;
+    }
+
+    /**
+     * We assume that calls to non-existing methods have a corresponding method in the redis client that is being used.
+     * We therefore proxy the request to the current master and if it fails because of connection errors, we attempt
+     * to rediscover the master so that we can re-try the command on that server.
+     *
+     * @param $methodName
+     * @param array $methodArguments
+     */
+    public function __call($methodName, array $methodArguments = array())
+    {
+        try {
+
+            return $this->proxyFunctionCallToMaster($methodName, $methodArguments);
+
+        } catch (ConnectionError $e) {
+
+            // retry proxying the function only once.  When backoff is needed, it should be implemented in the MasterDiscovery object
+            $this->invalidateMasterConnection();
+            return $this->proxyFunctionCallToMaster($methodName, $methodArguments);
+
+        }
+    }
+
+    /**
+     * Proxies a call to a non-existing method in this object to the redis client
      *
      * @param $name
      * @param array $arguments
+     * @return mixed
      */
-    public function __call($name, array $arguments = array())
+    private function proxyFunctionCallToMaster($name, array $arguments)
     {
-        if (!$this->masterIsKnown()) {
+        if ($this->masterIsUnknown()) {
             $this->master = $this->masterDiscovery->getMaster();
         }
 
         return call_user_func_array(array($this->master, $name), $arguments);
     }
-
-
-    /**public function __call($name, array $arguments = array())
-    {
-        if (!$this->masterIsKnown()) {
-            $this->master = $this->masterDiscovery->getMaster();
-            $this->backoff->reset();
-        }
-
-        try {
-            $this->proxyCall($name, $arguments);
-        } catch (ConnectionException $e) {
-            // rediscover the master after a back-off
-
-            $this->master = null;
-            if ($backoff->shouldWeTryAgain()) {
-                sleep($backoff->getBackoffInMicroseconds());
-                $this->_call($name, $arguments);
-            } else {
-                throw $e;
-            }
-
-        }
-    }
-
-    /**
-     * Fails over to another node upon connection exceptions by finding the new master
-     */
-    /**private function failover()
-    {
-        $this->master = null;
-    }**/
 } 
