@@ -90,10 +90,5 @@ class HAClientTest extends \PHPUnit_Framework_TestCase
         $haclient = new HAClient($masterDiscovery);
         $haclient->get('test');
     }
-
-    public function testThatMultipleFailoversAreHandledSeparately()
-    {
-        $this->markTestIncomplete('Todo');
-    }
 }
  
