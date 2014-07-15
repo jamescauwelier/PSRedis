@@ -121,7 +121,7 @@ After installing all of these, execute the following in the project root to prov
 
 ```
 vagrant up
-``
+```
 
 After that, run the integration tests with
 
