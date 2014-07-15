@@ -152,4 +152,9 @@ class Client
     {
         return $this->getRoleType() === Client::ROLE_SLAVE;
     }
+
+    public function __call($name, array $parameters = array())
+    {
+
+    }
 } 
