@@ -1,7 +1,7 @@
 <?php
 
 
-namespace PSRedis\Client\BackoffStrategy;
+namespace PSRedis\MasterDiscovery\BackoffStrategy;
 
 
 class IncrementalTest extends \PHPUnit_Framework_TestCase

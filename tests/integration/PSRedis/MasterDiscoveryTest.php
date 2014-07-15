@@ -6,7 +6,7 @@ namespace PSRedis;
 
 use PSRedis\Client\Adapter\Predis\PredisClientCreator;
 use PSRedis\Client\Adapter\PredisClientAdapter;
-use PSRedis\Client\BackoffStrategy\Incremental;
+use PSRedis\MasterDiscovery\BackoffStrategy\Incremental;
 
 require_once __DIR__ . '/Redis_Integration_TestCase.php';
 

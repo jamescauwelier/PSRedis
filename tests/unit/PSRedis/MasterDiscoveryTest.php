@@ -3,13 +3,13 @@
 namespace PSRedis;
 
 use PSRedis\Client\Adapter\Predis\Mock\MockedPredisClientCreatorWithNoMasterAddress;
-use PSRedis\Client\BackoffStrategy\Incremental;
+use PSRedis\MasterDiscovery\BackoffStrategy\Incremental;
 use PSRedis\Exception\ConnectionError;
 use PSRedis\Client\Adapter\PredisClientAdapter;
 
 class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
 {
-    private $monitorSetName = 'name-of-monitor-set';
+    private $masterName = 'name-of-master';
 
     private $onlineSentinelIpAddress = '127.0.0.1';
     private $onlineSentinelPort = 2424;
@@ -26,7 +26,7 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
     private $observedBackoff = false;
 
     /**
-     * @return \Redis\Client
+     * @return \PRedis\Client
      */
     private function mockOnlineSentinel()
     {
@@ -91,35 +91,35 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
 
     public function testAMonitorSetHasAName()
     {
-        $monitorSet = new MasterDiscovery($this->monitorSetName);
-        $this->assertEquals($this->monitorSetName, $monitorSet->getName(), 'A monitor set is identified by a name');
+        $masterDiscovery = new MasterDiscovery($this->masterName);
+        $this->assertEquals($this->masterName, $masterDiscovery->getName(), 'A master discovery is identified by a name (sentinels can monitor more than 1 master)');
     }
 
     public function testAMonitorSetNameCannotBeEmpty()
     {
-        $this->setExpectedException('\\PSRedis\\Exception\\InvalidProperty', 'A monitor set needs a valid name');
+        $this->setExpectedException('\\PSRedis\\Exception\\InvalidProperty', 'A master discovery needs a valid name (sentinels can monitor more than 1 master)');
         new MasterDiscovery('');
     }
 
     public function testThatSentinelClientsCanBeAddedToMonitorSets()
     {
-        $monitorSet = new MasterDiscovery($this->monitorSetName);
-        $monitorSet->addSentinel($this->mockOnlineSentinel());
-        $this->assertAttributeCount(1, 'sentinels', $monitorSet, 'Sentinel node can be added to a monitor set');
+        $masterDiscovery = new MasterDiscovery($this->masterName);
+        $masterDiscovery->addSentinel($this->mockOnlineSentinel());
+        $this->assertAttributeCount(1, 'sentinels', $masterDiscovery, 'Sentinel node can be added to a master discovery object');
     }
 
     public function testThatOnlySentinelClientObjectsCanBeAddedAsNode()
     {
         $this->setExpectedException('\\PHPUnit_Framework_Error', 'Argument 1 passed to PSRedis\MasterDiscovery::addSentinel() must be an instance of PSRedis\Client');
-        $monitorSet = new MasterDiscovery($this->monitorSetName);
-        $monitorSet->addSentinel(new \StdClass());
+        $masterDiscovery = new MasterDiscovery($this->masterName);
+        $masterDiscovery->addSentinel(new \StdClass());
     }
 
     public function testThatWeNeedNodesConfigurationToDiscoverAMaster()
     {
         $this->setExpectedException('\\PSRedis\\Exception\\ConfigurationError', 'You need to configure and add sentinel nodes before attempting to fetch a master');
-        $monitorSet = new MasterDiscovery($this->monitorSetName);
-        $monitorSet->getMaster();
+        $masterDiscovery = new MasterDiscovery($this->masterName);
+        $masterDiscovery->getMaster();
     }
 
     public function testThatMasterCannotBeFoundIfWeCannotConnectToSentinels()
@@ -127,10 +127,10 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
         $this->setExpectedException('\\PSRedis\\Exception\\ConnectionError', 'All sentinels are unreachable');
         $sentinel1 = $this->mockOfflineSentinel();
         $sentinel2 = $this->mockOfflineSentinel();
-        $monitorSet = new MasterDiscovery('all-fail');
-        $monitorSet->addSentinel($sentinel1);
-        $monitorSet->addSentinel($sentinel2);
-        $monitorSet->getMaster();
+        $masterDiscovery = new MasterDiscovery('all-fail');
+        $masterDiscovery->addSentinel($sentinel1);
+        $masterDiscovery->addSentinel($sentinel2);
+        $masterDiscovery->getMaster();
     }
 
     public function testThatSentinelNodeIsReturnedOnSuccessfulMasterDiscovery()
@@ -141,11 +141,11 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
         $sentinel1 = $this->mockOfflineSentinel();
         $sentinel2 = $this->mockOnlineSentinel();
 
-        $monitorSet = new MasterDiscovery('online-sentinel');
-        $monitorSet->setBackoffStrategy($noBackoff);
-        $monitorSet->addSentinel($sentinel1);
-        $monitorSet->addSentinel($sentinel2);
-        $masterNode = $monitorSet->getMaster();
+        $masterDiscovery = new MasterDiscovery('online-sentinel');
+        $masterDiscovery->setBackoffStrategy($noBackoff);
+        $masterDiscovery->addSentinel($sentinel1);
+        $masterDiscovery->addSentinel($sentinel2);
+        $masterNode = $masterDiscovery->getMaster();
 
         $this->assertInstanceOf('\\PSRedis\\Client', $masterNode, 'The master returned should be an instance of \\PSRedis\\Client');
         $this->assertEquals($this->onlineMasterIpAddress, $masterNode->getIpAddress(), 'The master node IP address returned should be the one of the online sentinel');
@@ -158,10 +158,10 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
 
         $sentinel1 = $this->mockOnlineSentinelWithMasterSteppingDown();
         $sentinel2 = $this->mockOnlineSentinel();
-        $monitorSet = new MasterDiscovery('online-sentinel');
-        $monitorSet->addSentinel($sentinel1);
-        $monitorSet->addSentinel($sentinel2);
-        $monitorSet->getMaster();
+        $masterDiscovery = new MasterDiscovery('online-sentinel');
+        $masterDiscovery->addSentinel($sentinel1);
+        $masterDiscovery->addSentinel($sentinel2);
+        $masterDiscovery->getMaster();
     }
 
     public function testThatABackoffIsAttempted()
@@ -172,11 +172,11 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
         $sentinel1 = $this->mockOfflineSentinel();
         $sentinel2 = $this->mockOnlineSentinelWithMasterSteppingDown();
 
-        $monitorSet = new MasterDiscovery('online-sentinel');
-        $monitorSet->setBackoffStrategy($backoffOnce);
-        $monitorSet->addSentinel($sentinel1);
-        $monitorSet->addSentinel($sentinel2);
-        $masterNode = $monitorSet->getMaster();
+        $masterDiscovery = new MasterDiscovery('online-sentinel');
+        $masterDiscovery->setBackoffStrategy($backoffOnce);
+        $masterDiscovery->addSentinel($sentinel1);
+        $masterDiscovery->addSentinel($sentinel2);
+        $masterNode = $masterDiscovery->getMaster();
 
         $this->assertEquals($this->onlineMasterIpAddress, $masterNode->getIpAddress(), 'A master that stepped down between discovery and connecting should be retried after backoff (check IP address)');
         $this->assertEquals($this->onlineMasterPort, $masterNode->getPort(), 'A master that stepped down between discovery and connecting should be retried after backoff (check port)');
@@ -190,11 +190,11 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
         $sentinel1 = $this->mockOfflineSentinel();
         $sentinel2 = $this->mockOnlineSentinel();
 
-        $monitorSet = new MasterDiscovery('online-sentinel');
-        $monitorSet->setBackoffStrategy($noBackoff);
-        $monitorSet->addSentinel($sentinel1);
-        $monitorSet->addSentinel($sentinel2);
-        $masterNode = $monitorSet->getMaster();
+        $masterDiscovery = new MasterDiscovery('online-sentinel');
+        $masterDiscovery->setBackoffStrategy($noBackoff);
+        $masterDiscovery->addSentinel($sentinel1);
+        $masterDiscovery->addSentinel($sentinel2);
+        $masterNode = $masterDiscovery->getMaster();
 
         $this->assertEquals(Client::ROLE_MASTER, $masterNode->getRole(), 'The role of the master should be \'master\'');
     }
@@ -209,12 +209,12 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
         $sentinel1 = $this->mockOfflineSentinel();
         $sentinel2 = $this->mockOnlineSentinelWithMasterSteppingDown();
 
-        $monitorSet = new MasterDiscovery('online-sentinel');
-        $monitorSet->setBackoffStrategy($backoffOnce);
-        $monitorSet->addSentinel($sentinel1);
-        $monitorSet->addSentinel($sentinel2);
-        $monitorSet->setBackoffObserver(array($this, 'backoffObserver'));
-        $monitorSet->getMaster();
+        $masterDiscovery = new MasterDiscovery('online-sentinel');
+        $masterDiscovery->setBackoffStrategy($backoffOnce);
+        $masterDiscovery->addSentinel($sentinel1);
+        $masterDiscovery->addSentinel($sentinel2);
+        $masterDiscovery->setBackoffObserver(array($this, 'backoffObserver'));
+        $masterDiscovery->getMaster();
 
         $this->assertTrue($this->observedBackoff, 'When backing off an observer can be called');
     }

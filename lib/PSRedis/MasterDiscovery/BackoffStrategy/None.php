@@ -1,10 +1,10 @@
 <?php
 
 
-namespace PSRedis\Client\BackoffStrategy;
+namespace PSRedis\MasterDiscovery\BackoffStrategy;
 
 
-use PSRedis\Client\BackoffStrategy;
+use PSRedis\MasterDiscovery\BackoffStrategy;
 
 /**
  * Class None
@@ -13,7 +13,7 @@ use PSRedis\Client\BackoffStrategy;
  * strategy more readable and explicit in your code instead of expressing yourself with integer and float
  * configuration parameters
  *
- * @package PSRedis\Client\BackoffStrategy
+ * @package PSRedis\MasterDiscovery\BackoffStrategy
  */
 class None
     implements BackoffStrategy

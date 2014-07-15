@@ -1,10 +1,10 @@
 <?php
 
 
-namespace PSRedis\Client\BackoffStrategy;
+namespace PSRedis\MasterDiscovery\BackoffStrategy;
 
 
-use PSRedis\Client\BackoffStrategy;
+use PSRedis\MasterDiscovery\BackoffStrategy;
 use PSRedis\Exception\InvalidProperty;
 use Symfony\Component\Validator\Constraints\Range;
 use Symfony\Component\Validator\Validation;

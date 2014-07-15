@@ -2,8 +2,8 @@
 
 namespace PSRedis;
 
-use PSRedis\Client\BackoffStrategy\None;
-use PSRedis\Client\BackoffStrategy;
+use PSRedis\MasterDiscovery\BackoffStrategy\None;
+use PSRedis\MasterDiscovery\BackoffStrategy;
 use PSRedis\Exception\ConfigurationError;
 use PSRedis\Exception\ConnectionError;
 use PSRedis\Exception\InvalidProperty;
@@ -36,7 +36,7 @@ class MasterDiscovery
 
     /**
      * The strategy to use when none of the sentinels could be reached.  Should we try again or leave it at that?
-     * @var Client\BackoffStrategy\None
+     * @var MasterDiscovery\BackoffStrategy\None
      */
     private $backoffStrategy;
 
@@ -101,7 +101,7 @@ class MasterDiscovery
         $validator = Validation::createValidator();
         $violations = $validator->validateValue($name, new NotBlank());
         if ($violations->count() > 0) {
-            throw new InvalidProperty('A monitor set needs a valid name');
+            throw new InvalidProperty('A master discovery needs a valid name (sentinels can monitor more than 1 master)');
         }
     }
 

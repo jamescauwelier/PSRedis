@@ -1,14 +1,14 @@
 <?php
 
 
-namespace PSRedis\Client;
+namespace PSRedis\MasterDiscovery;
 
 /**
  * Interface BackoffStrategy
  *
  * Implements logic to decide on whether we should try again after a backoff and how long to backoff
  *
- * @package PSRedis\Client
+ * @package PSRedis\MasterDiscovery
  */
 interface BackoffStrategy
 {
