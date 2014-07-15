@@ -117,6 +117,8 @@ class MasterDiscovery
             throw new ConfigurationError('You need to configure and add sentinel nodes before attempting to fetch a master');
         }
 
+        $this->backoffStrategy->reset();
+
         do {
 
             try {

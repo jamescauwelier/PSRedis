@@ -6,6 +6,7 @@ use PSRedis\Client\Adapter\Predis\Mock\MockedPredisClientCreatorWithNoMasterAddr
 use PSRedis\MasterDiscovery\BackoffStrategy\Incremental;
 use PSRedis\Exception\ConnectionError;
 use PSRedis\Client\Adapter\PredisClientAdapter;
+use PSRedis\MasterDiscovery\BackoffStrategy\None;
 
 class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
 {
@@ -49,7 +50,7 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @return \Redis\Client
+     * @return \PSRedis\Client
      */
     private function mockOfflineSentinel()
     {
@@ -59,6 +60,31 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
         );
         \Phake::when($sentinelClient)->getIpAddress()->thenReturn($this->offlineSentinelIpAddress);
         \Phake::when($sentinelClient)->getPort()->thenReturn($this->offlineSentinelPort);
+
+        return $sentinelClient;
+    }
+
+    /**
+     * @return \PSRedis\Client
+     */
+    private function mockTemporaryOfflineSentinel()
+    {
+        // mock a master node
+        $masterNode = \Phake::mock('\\PSRedis\Client');
+        \Phake::when($masterNode)->getIpAddress()->thenReturn($this->onlineMasterIpAddress);
+        \Phake::when($masterNode)->getPort()->thenReturn($this->onlineMasterPort);
+        \Phake::when($masterNode)->isMaster()->thenReturn(true);
+
+        // mock a sentinel client that is temporarily offline
+        $sentinelClient = \Phake::mock('\\PSRedis\\Client');
+        \Phake::when($sentinelClient)->connect()
+            ->thenThrow(
+                new ConnectionError(sprintf('Could not connect to sentinel at %s:%d', $this->onlineSentinelIpAddress, $this->onlineSentinelPort))
+            )
+            ->thenReturn(null);
+        \Phake::when($sentinelClient)->getMaster(\Phake::anyParameters())->thenReturn($masterNode);
+        \Phake::when($sentinelClient)->getIpAddress()->thenReturn($this->onlineSentinelIpAddress);
+        \Phake::when($sentinelClient)->getPort()->thenReturn($this->onlineSentinelPort);
 
         return $sentinelClient;
     }
@@ -222,6 +248,37 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
     public function backoffObserver()
     {
         $this->observedBackoff = true;
+    }
+
+    /**
+     * @group regression
+     * @group issue-9
+     */
+    public function testThatABackoffStrategyIsResetWhenStartingTheMasterDiscovery()
+    {
+        $backoff = new Incremental(0, 1);
+        $backoff->setMaxAttempts(2);
+
+        $sentinel1 = $this->mockOfflineSentinel();
+
+        $masterDiscovery = new MasterDiscovery('online-sentinel');
+        $masterDiscovery->setBackoffStrategy($backoff);
+        $masterDiscovery->addSentinel($sentinel1);
+
+        try {
+            $masterNode = $masterDiscovery->getMaster();
+        } catch (ConnectionError $e) {
+            // we expect this to fail as no sentinels are online
+        }
+
+        // add a sentinel that fails first, but succeeds after back-off (the bug, if present, will prevent reconnection of sentinels after backoff)
+        $sentinel2 = $this->mockTemporaryOfflineSentinel();
+        $masterDiscovery->addSentinel($sentinel2);
+
+        // try to discover the master node
+        $masterNode = $masterDiscovery->getMaster();
+        $this->assertInstanceOf('\\PSRedis\\Client', $masterNode, 'When backing off is reset on each discovery, we should have received the master node here');
+
     }
 }
  
