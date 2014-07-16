@@ -124,6 +124,11 @@ class PredisClientAdapter
      */
     public function __call($methodName, array $methodParameters = array())
     {
-        return call_user_func_array(array($this->getPredisClient(), $methodName), $methodParameters);
+        try {
+            return call_user_func_array(array($this->getPredisClient(), $methodName), $methodParameters);
+        } catch (ConnectionException $e) {
+            throw new ConnectionError($e->getMessage());
+        }
+
     }
 }
