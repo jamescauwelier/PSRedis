@@ -4,7 +4,6 @@
 namespace PSRedis;
 
 
-use Predis\CommunicationException;
 use PSRedis\Exception\ConnectionError;
 
 class HAClientTest extends \PHPUnit_Framework_TestCase

@@ -29,5 +29,11 @@ class NullClientAdapterTest extends \PHPUnit_Framework_TestCase
         $clientAdapter = new NullClientAdapter();
         $this->assertEquals(Client::ROLE_SENTINEL, $clientAdapter->getRole(), 'The role is always sentinel');
     }
+
+    public function testThatRedisCommandsAreNotProxied()
+    {
+        $clientAdapter = new NullClientAdapter();
+        $this->assertEquals(null, $clientAdapter->set('test', 'ok'), 'Test that command is not proxied (not important in null adapter)');
+    }
 }
  
