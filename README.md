@@ -41,6 +41,23 @@ $masterDiscovery->addSentinel($sentinel3);
 $master = $masterDiscovery->getMaster();
 ```
 
+### Auto failover
+
+You have the option of letting the library handle the failover.  That means that in case of connection errors, the
+library will select the new master or reconnect to the existing ones depending of what the sentinels decide is the
+proper action.  After this reconnection, the command will be re-tried, but only once.  No option for backoff exists
+here.
+
+```php
+// configuration of $masterDiscovery
+$masterDiscovery = ...
+
+// using the $masterDiscovery as a dependency in an Highly Available Client (HAClient)
+$HAClient = new HAClient($masterDiscovery);
+$HAClient->set('test', 'ok');
+$test = $HAClient->get('test');
+```
+
 ### Customizing the adapter
 
 You can choose what kind of client adapter to use or even write your own.  If you write your own you need to make sure

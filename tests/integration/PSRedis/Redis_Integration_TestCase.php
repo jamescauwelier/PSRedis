@@ -15,6 +15,11 @@ class Redis_Integration_TestCase extends \PHPUnit_Framework_TestCase
 
     private $sentinelSshConnection;
 
+    public function setUp()
+    {
+        $this->initializeReplicationSet();
+    }
+
     /**
      * Initializes a replication set by using vagrant to spin up and ansible to provision a set of redis servers
      */
@@ -97,5 +102,10 @@ class Redis_Integration_TestCase extends \PHPUnit_Framework_TestCase
     {
         $sshConnection = new VagrantSsh($ipAddress);
         $sshConnection->execute('sudo start sentinel');
+    }
+
+    protected function debugSegfaultToMaster()
+    {
+        $this->getMasterSshConnection()->execute('/etc/redis/segfault_after_5s.sh');
     }
 } 

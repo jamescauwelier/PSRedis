@@ -116,4 +116,19 @@ class PredisClientAdapter
     {
         return $this->getPredisClient()->role();
     }
+
+    /**
+     * @param $methodName
+     * @param array $methodParameters
+     * @return mixed|void
+     */
+    public function __call($methodName, array $methodParameters = array())
+    {
+        try {
+            return call_user_func_array(array($this->getPredisClient(), $methodName), $methodParameters);
+        } catch (ConnectionException $e) {
+            throw new ConnectionError($e->getMessage());
+        }
+
+    }
 }

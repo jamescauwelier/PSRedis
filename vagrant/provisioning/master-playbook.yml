@@ -29,6 +29,9 @@
     - name: Creates redis configuration directory
       file: path=/etc/redis state=directory owner=redis
 
+    - name: Copy a bashscript to let the server crash
+      template: src=files/segfault_after_5s.j2 dest=/etc/redis/segfault_after_5s.sh owner=redis mode=0755
+
     - name: Configure redis
       template: src=files/conf/master.j2 dest=/etc/redis/redis.conf owner=redis
 

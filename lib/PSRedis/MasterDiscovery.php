@@ -122,6 +122,7 @@ class MasterDiscovery
         do {
 
             try {
+
                 foreach ($this->getSentinels() as $sentinelClient) {
                     /** @var $sentinelClient Client */
                     try {

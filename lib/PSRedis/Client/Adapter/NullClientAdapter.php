@@ -33,4 +33,9 @@ class NullClientAdapter
     {
         return Client::ROLE_SENTINEL;
     }
+
+    public function __call($methodName, array $methodParameters = array())
+    {
+        return null;
+    }
 }

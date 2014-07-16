@@ -59,5 +59,13 @@ class PredisClientAdapterTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals('sentinel', $clientAdapter->getRole(), 'The server we are connected to is a sentinel');
     }
+
+    public function testThatRedisCommandsAreProxied()
+    {
+        $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreatorWithMasterAddress(), Client::TYPE_SENTINEL);
+
+        $this->assertTrue($clientAdapter->set('test', 'ok'), 'SET command is proxied');
+        $this->assertEquals('ok', $clientAdapter->get('test'), 'GET command is proxied');
+    }
 }
  

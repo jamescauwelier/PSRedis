@@ -152,4 +152,9 @@ class Client
     {
         return $this->getRoleType() === Client::ROLE_SLAVE;
     }
+
+    public function __call($methodName, array $methodParameters = array())
+    {
+        return call_user_func_array(array($this->clientAdapter, $methodName), $methodParameters);
+    }
 } 

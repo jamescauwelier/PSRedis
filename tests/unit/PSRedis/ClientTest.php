@@ -54,6 +54,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         \Phake::when($redisClientAdapter)->isConnected()->thenReturn(true);
         \Phake::when($redisClientAdapter)->getMaster('test')->thenReturn($client);
         \Phake::when($redisClientAdapter)->getRole()->thenReturn(array($role));
+        \Phake::when($redisClientAdapter)->set('test', 'ok')->thenReturn(true);
+        \Phake::when($redisClientAdapter)->get('test')->thenReturn('ok');
 
         return $redisClientAdapter;
     }
@@ -180,6 +182,14 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($slaveNode->isSlave(), 'A slave should be identified as slave');
         $this->assertFalse($slaveNode->isSentinel(), 'A slave should not be identified as sentinel');
         $this->assertFalse($slaveNode->isMaster(), 'A slave should not be identified as master');
+    }
+
+    public function testThatRedisCommandsAreProxied()
+    {
+        $masterClientAdapter = $this->mockClientAdapterForMaster();
+        $masterNode = new Client($this->ipAddress, $this->port, $masterClientAdapter);
+        $this->assertTrue($masterNode->set('test', 'ok'), 'SET command is proxied');
+        $this->assertEquals('ok', $masterNode->get('test'), 'GET command is proxied');
     }
 }
  
