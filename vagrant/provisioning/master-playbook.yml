@@ -17,10 +17,10 @@
     - name: Download redis
       get_url: url=http://download.redis.io/releases/redis-{{redis_version}}.tar.gz dest=/tmp
 
-    - name: Untar Redis
+    - name: Untar PSRedis
       command: chdir=/tmp creates=redis-{{redis_version}} tar -xzf redis-{{redis_version}}.tar.gz
 
-    - name: Install Redis
+    - name: Install PSRedis
       command: creates=/usr/local/bin/redis-server chdir=/tmp/redis-{{redis_version}} make install
 
     - name: Create user redis
@@ -28,6 +28,9 @@
 
     - name: Creates redis configuration directory
       file: path=/etc/redis state=directory owner=redis
+
+    - name: Copy a bashscript to let the server crash
+      template: src=files/segfault_after_5s.j2 dest=/etc/redis/segfault_after_5s.sh owner=redis mode=0755
 
     - name: Configure redis
       template: src=files/conf/master.j2 dest=/etc/redis/redis.conf owner=redis
@@ -41,15 +44,15 @@
     - name: configure example configuration for sentinel
       template: src=files/conf/sentinel.j2 dest=/etc/redis/sentinel.example.conf owner=redis
 
-    - name: Configure Upstart for Redis
+    - name: Configure Upstart for PSRedis
       template: src=files/upstart/redis.j2 dest=/etc/init/redis.conf
-      notify: Restart Redis
+      notify: Restart PSRedis
 
     - name: Configure Upstart for Sentinel
       template: src=files/upstart/sentinel.j2 dest=/etc/init/sentinel.conf
       notify: Restart Sentinel
 
-    - name: Start Redis
+    - name: Start PSRedis
       service: name=redis state=started
 
     - name: Start Sentinel
@@ -57,7 +60,7 @@
 
   handlers:
 
-      - name: Restart Redis
+      - name: Restart PSRedis
         service: name=redis state=restarted
 
       - name: Restart Sentinel

@@ -1,5 +1,5 @@
 {
-    "name": "sparkcentral/predis-sentinel",
+    "name": "sparkcentral/psredis",
     "type": "library",
     "description": "Sentinel client for the popular php redis client",
     "keywords": ["nosql", "redis", "predis", "sentinel"],
@@ -19,10 +19,9 @@
     },
     "require-dev": {
         "phpunit/phpunit": "~3.7",
-        "phake/phake": "@stable",
-        "ext-pcntl": "*"
+        "phake/phake": "@stable"
     },
     "autoload": {
-        "psr-0": {"Sentinel": "lib/", "Redis": "lib/"}
+        "psr-0": {"Sentinel": "lib/", "PSRedis": "lib/"}
     }
 }

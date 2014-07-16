@@ -17,10 +17,10 @@
     - name: Download redis
       get_url: url=http://download.redis.io/releases/redis-{{redis_version}}.tar.gz dest=/tmp
 
-    - name: Untar Redis
+    - name: Untar PSRedis
       command: chdir=/tmp creates=redis-{{redis_version}} tar -xzf redis-{{redis_version}}.tar.gz
 
-    - name: Install Redis
+    - name: Install PSRedis
       command: creates=/usr/local/bin/redis-server chdir=/tmp/redis-{{redis_version}} make install
 
     - name: Create user redis
