@@ -48,6 +48,7 @@ class PredisClientAdapterTest extends \PHPUnit_Framework_TestCase
         $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreatorWithNoMasterAddress(), Client::TYPE_SENTINEL);
         $clientAdapter->setIpAddress('127.0.0.1');
         $clientAdapter->setPort(4545);
+
         $clientAdapter->getMaster('test');
     }
 

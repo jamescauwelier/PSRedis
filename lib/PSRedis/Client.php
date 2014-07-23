@@ -111,6 +111,7 @@ class Client
 
     public function isConnected()
     {
+
         return (bool) $this->clientAdapter->isConnected();
     }
 
