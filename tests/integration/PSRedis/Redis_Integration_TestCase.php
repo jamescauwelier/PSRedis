@@ -106,6 +106,6 @@ class Redis_Integration_TestCase extends \PHPUnit_Framework_TestCase
 
     protected function debugSegfaultToMaster()
     {
-        $this->getMasterSshConnection()->execute('/etc/redis/segfault_after_5s.sh');
+        $this->getMasterSshConnection()->execute('/etc/redis/segfault_after_5s.sh &');
     }
 } 
