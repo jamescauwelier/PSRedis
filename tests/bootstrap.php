@@ -10,3 +10,4 @@ require_once __DIR__ . '/unit/PSRedis/Client/Adapter/Predis/Mock/AbstractMockedP
 require_once __DIR__ . '/unit/PSRedis/Client/Adapter/Predis/Mock/MockedPredisClientCreatorWithNoMasterAddress.php';
 require_once __DIR__ . '/unit/PSRedis/Client/Adapter/Predis/Mock/MockedPredisClientCreatorWithMasterAddress.php';
 require_once __DIR__ . '/unit/PSRedis/Client/Adapter/Predis/Mock/MockedPredisClientCreatorWithSentinelOffline.php';
+require_once __DIR__ . '/unit/PSRedis/Client/Adapter/Predis/Mock/MockedPredisClientCreatorWithFailingRedisConnection.php';

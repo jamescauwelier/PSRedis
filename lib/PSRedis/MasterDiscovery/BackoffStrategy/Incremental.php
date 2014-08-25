@@ -6,8 +6,6 @@ namespace PSRedis\MasterDiscovery\BackoffStrategy;
 
 use PSRedis\MasterDiscovery\BackoffStrategy;
 use PSRedis\Exception\InvalidProperty;
-use Symfony\Component\Validator\Constraints\Range;
-use Symfony\Component\Validator\Validation;
 
 /**
  * Class Incremental
@@ -96,9 +94,7 @@ class Incremental
      */
     private function guardThatBackoffIsNotNegative($initialBackoff)
     {
-        $validator = Validation::createValidator();
-        $violations = $validator->validateValue($initialBackoff, new Range(array('min' => 0)));
-        if ($violations->count() > 0) {
+        if ($initialBackoff < 0) {
             throw new InvalidProperty('The initial backoff cannot be smaller than zero');
         }
     }

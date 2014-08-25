@@ -66,12 +66,6 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($this->ipAddress, $sentinel->getIpAddress(), 'A sentinel location is identified by ip address');
     }
 
-    public function testSentinelRequiresAValidIpAddress()
-    {
-        $this->setExpectedException('\\PSRedis\\Exception\\InvalidProperty', 'A sentinel node requires a valid IP address');
-        new Client('blabla', $this->port);
-    }
-
     public function testSentinelHasPort()
     {
         $sentinel = new Client($this->ipAddress, $this->port);
@@ -88,12 +82,6 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $sentinel = new Client($this->ipAddress, $this->port, new NullClientAdapter());
         $this->assertAttributeInstanceOf('\\PSRedis\\Client\\Adapter\\NullClientAdapter', 'clientAdapter', $sentinel, 'The used redis client adapter can be swapped');
-    }
-
-    public function testSentinelRefusesTextAsAnInvalidPort()
-    {
-        $this->setExpectedException('\\PSRedis\\Exception\\InvalidProperty', 'A sentinel node requires a valid service port');
-        new Client($this->ipAddress, 'abc');
     }
 
     public function testThatFailureToConnectToSentinelsThrowsAnError()

@@ -9,8 +9,6 @@ use PSRedis\Exception\ConnectionError;
 use PSRedis\Exception\InvalidProperty;
 use PSRedis\Exception\RoleError;
 use PSRedis\Exception\SentinelError;
-use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Component\Validator\Validation;
 
 /**
  * Class MasterDiscovery
@@ -98,9 +96,7 @@ class MasterDiscovery
      */
     private function guardThatTheNameIsNotBlank($name)
     {
-        $validator = Validation::createValidator();
-        $violations = $validator->validateValue($name, new NotBlank());
-        if ($violations->count() > 0) {
+        if (empty($name)) {
             throw new InvalidProperty('A master discovery needs a valid name (sentinels can monitor more than 1 master)');
         }
     }

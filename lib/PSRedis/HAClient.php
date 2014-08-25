@@ -2,7 +2,7 @@
 
 
 namespace PSRedis;
-use Predis\Connection\ConnectionException;
+
 use PSRedis\Exception\ConnectionError;
 
 /**

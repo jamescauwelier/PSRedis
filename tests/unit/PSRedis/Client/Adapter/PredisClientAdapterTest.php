@@ -8,6 +8,7 @@ use PSRedis\Client\Adapter\Predis\Mock\MockedPredisClientCreatorWithMasterAddres
 use PSRedis\Client\Adapter\Predis\Mock\MockedPredisClientCreatorWithNoMasterAddress;
 use PSRedis\Client\Adapter\Predis\Mock\MockedPredisClientCreatorWithSentinelOffline;
 use PSRedis\Client;
+use PSRedis\Client\Adapter\Predis\Mock\MockedPredisClientCreatorWithFailingRedisConnection;
 
 class PredisClientAdapterTest extends \PHPUnit_Framework_TestCase
 {
@@ -67,6 +68,13 @@ class PredisClientAdapterTest extends \PHPUnit_Framework_TestCase
 
         $this->assertTrue($clientAdapter->set('test', 'ok'), 'SET command is proxied');
         $this->assertEquals('ok', $clientAdapter->get('test'), 'GET command is proxied');
+    }
+
+    public function testThatConnectionErrorsAreProxied()
+    {
+        $this->setExpectedException('\\PSRedis\\Exception\\ConnectionError');
+        $clientAdapter = new PredisClientAdapter(new MockedPredisClientCreatorWithFailingRedisConnection(), Client::TYPE_REDIS);
+        $clientAdapter->get('test');
     }
 }
  
