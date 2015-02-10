@@ -21,6 +21,9 @@
         "phake/phake": "@stable"
     },
     "autoload": {
+        "classmap": [
+            "lib/PSRedis"
+        ],
         "psr-0": {"Sentinel": "lib/", "PSRedis": "lib/"}
     }
 }
