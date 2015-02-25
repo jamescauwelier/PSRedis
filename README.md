@@ -129,12 +129,17 @@ be done using the following command:
 
 ### Integration testing
 
-To run the integration tests, make sure you install [Vagrant](http://www.vagrantup.com).  We have used it together with
-[VirtualBox](https://www.virtualbox.org).
+#### Prerequisites
 
-The VM's are provisioned with [ansible](http://www.ansible.com/home).
+Make sure you have installed these on your machine before running the tests:
 
-After installing all of these, execute the following in the project root to provision the machines:
+- [Vagrant](http://www.vagrantup.com)
+- [VirtualBox](https://www.virtualbox.org)
+- [Ansible](http://docs.ansible.com/intro_installation.html)
+
+#### Running the tests
+
+Before running the tests you need to setup the VM to run the tests on.  Use the following command to bring the box up:
 
 ```
 vagrant up
