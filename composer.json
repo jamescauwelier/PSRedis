@@ -13,7 +13,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "~5.4",
+        "php": ">=5.4",
         "predis/predis": ">=1.0"
     },
     "require-dev": {
@@ -23,4 +23,4 @@
     "autoload": {
         "psr-0": {"Sentinel": "lib/", "PSRedis": "lib/"}
     }
-}
+}git 
