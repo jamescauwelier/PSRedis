@@ -14,45 +14,45 @@
 
   tasks:
 
-    - name: Download redis
+    - name: Download Redis
       get_url: url=http://download.redis.io/releases/redis-{{redis_version}}.tar.gz dest=/tmp
 
-    - name: Untar PSRedis
+    - name: Untar Redis
       command: chdir=/tmp creates=redis-{{redis_version}} tar -xzf redis-{{redis_version}}.tar.gz
 
-    - name: Install PSRedis
+    - name: Install Redis
       command: creates=/usr/local/bin/redis-server chdir=/tmp/redis-{{redis_version}} make install
 
     - name: Create user redis
       user: name=redis system=yes home=/var/lib/redis shell=/bin/false
 
-    - name: Creates redis configuration directory
+    - name: Creates Redis configuration directory
       file: path=/etc/redis state=directory owner=redis
 
     - name: Copy a bashscript to let the server crash
       template: src=files/segfault_after_5s.j2 dest=/etc/redis/segfault_after_5s.sh owner=redis mode=0755
 
-    - name: Configure redis
+    - name: Configure Redis
       template: src=files/conf/master.j2 dest=/etc/redis/redis.conf owner=redis
 
-    - name: configure example configuration for redis
+    - name: configure example configuration for Redis
       template: src=files/conf/master.j2 dest=/etc/redis/redis.example.conf owner=redis
 
-    - name: Configure sentinel
+    - name: Configure Sentinel
       template: src=files/conf/sentinel.j2 dest=/etc/redis/sentinel.conf owner=redis
 
-    - name: configure example configuration for sentinel
+    - name: configure example configuration for Sentinel
       template: src=files/conf/sentinel.j2 dest=/etc/redis/sentinel.example.conf owner=redis
 
-    - name: Configure Upstart for PSRedis
+    - name: Configure Upstart for Redis
       template: src=files/upstart/redis.j2 dest=/etc/init/redis.conf
-      notify: Restart PSRedis
+      notify: Restart Redis
 
     - name: Configure Upstart for Sentinel
       template: src=files/upstart/sentinel.j2 dest=/etc/init/sentinel.conf
       notify: Restart Sentinel
 
-    - name: Start PSRedis
+    - name: Start Redis
       service: name=redis state=started
 
     - name: Start Sentinel
@@ -60,7 +60,7 @@
 
   handlers:
 
-      - name: Restart PSRedis
+      - name: Restart Redis
         service: name=redis state=restarted
 
       - name: Restart Sentinel
