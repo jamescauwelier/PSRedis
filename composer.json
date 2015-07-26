@@ -1,13 +1,12 @@
 {
-    "name": "sparkcentral/psredis",
+    "name": "jamescauwelier/psredis",
     "type": "library",
     "description": "Sentinel client for the popular php redis client",
     "keywords": ["nosql", "redis", "predis", "sentinel"],
     "authors": [
         {
             "name": "James Cauwelier",
-            "email": "james@sparkcentral.com",
-            "homepage": "http://www.sparkcentral.com",
+            "email": "james.cauwelier@gmail.com",
             "role": "Developer"
         }
     ],
