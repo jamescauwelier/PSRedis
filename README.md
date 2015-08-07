@@ -11,7 +11,7 @@ the following in your composer file:
 
 ```
 "require": {
-    "sparkcentral/psredis": "*"
+    "jamescauwelier/psredis": "~1.0"
 },
 ```
 
