@@ -4,6 +4,7 @@
 namespace PSRedis;
 
 use PSRedis\Exception\ConnectionError;
+use PSRedis\Sentinel\Configuration;
 
 /**
  * Class HAClient
@@ -17,6 +18,12 @@ use PSRedis\Exception\ConnectionError;
 class HAClient 
 {
     /**
+     * Configures what sentinels to talk to to discover nodes
+     * @var Configuration
+     */
+    private $sentinelConfiguration;
+
+    /**
      * Holds all configuration to the sentinels to execute the master discovery process
      * @var MasterDiscovery
      */
@@ -29,10 +36,15 @@ class HAClient
     private $master;
 
     /**
+     * @param Configuration $sentinelConfiguration
      * @param MasterDiscovery $masterDiscovery
      */
-    public function __construct(MasterDiscovery $masterDiscovery)
+    public function __construct(
+        Configuration $sentinelConfiguration,
+        MasterDiscovery $masterDiscovery
+    )
     {
+        $this->sentinelConfiguration = $sentinelConfiguration;
         $this->masterDiscovery = $masterDiscovery;
     }
 
@@ -90,7 +102,7 @@ class HAClient
     private function proxyFunctionCallToMaster($name, array $arguments)
     {
         if ($this->masterIsUnknown()) {
-            $this->master = $this->masterDiscovery->getMaster();
+            $this->master = $this->masterDiscovery->getNode($this->sentinelConfiguration);
         }
 
         return call_user_func_array(array($this->master, $name), $arguments);

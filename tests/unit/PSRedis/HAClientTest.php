@@ -5,12 +5,14 @@ namespace PSRedis;
 
 
 use PSRedis\Exception\ConnectionError;
+use PSRedis\Sentinel\Configuration;
 
 class HAClientTest extends \PHPUnit_Framework_TestCase
 {
     public function testThatAnHAClientContainsADependencyOnMasterDiscovery()
     {
-        $haclient = new HAClient(new MasterDiscovery('test'));
+        $haclient = new HAClient(new Configuration(), new MasterDiscovery('test'));
+        $this->assertAttributeInstanceOf('\\PSRedis\\Sentinel\\Configuration', 'sentinelConfiguration', $haclient);
         $this->assertAttributeInstanceOf('\\PSRedis\\MasterDiscovery', 'masterDiscovery', $haclient, 'The master discovery dependency should be saved in the object');
     }
 
@@ -21,12 +23,15 @@ class HAClientTest extends \PHPUnit_Framework_TestCase
         \Phake::when($master)->get('test')->thenReturn('ok');
         \Phake::when($master)->set('business', 'sparkcentral')->thenReturn(true);
 
+        // configure sentinel nodes
+        $sentinelConfiguration = new Configuration();
+
         // mock master discovery
         $masterDiscovery = \Phake::mock('\\PSRedis\\MasterDiscovery');
-        \Phake::when($masterDiscovery)->getMaster()->thenReturn($master);
+        \Phake::when($masterDiscovery)->getNode($sentinelConfiguration)->thenReturn($master);
 
         // testing proxy
-        $haclient = new HAClient($masterDiscovery);
+        $haclient = new HAClient($sentinelConfiguration, $masterDiscovery);
         $this->assertEquals('ok', $haclient->get('test'), 'Redis command "GET" is proxied to the master node');
         $this->assertEquals(true, $haclient->set('business', 'sparkcentral'), 'Redis command "SET" is proxied to the master node');
     }
@@ -39,14 +44,17 @@ class HAClientTest extends \PHPUnit_Framework_TestCase
             ->thenThrow(new ConnectionError())
             ->thenReturn('ok');
 
+        // sentinel nodes configuration
+        $sentinelConfiguration = new Configuration();
+
         // mock master discovery
         $masterDiscovery = \Phake::mock('\\PSRedis\\MasterDiscovery');
-        \Phake::when($masterDiscovery)->getMaster()
+        \Phake::when($masterDiscovery)->getNode($sentinelConfiguration)
             ->thenReturn($master)
             ->thenReturn($master);
 
         // testing proxy
-        $haclient = new HAClient($masterDiscovery);
+        $haclient = new HAClient($sentinelConfiguration, $masterDiscovery);
         $this->assertEquals('ok', $haclient->get('test'), 'HAClient automatically retries on connection errors');
     }
 
@@ -60,14 +68,17 @@ class HAClientTest extends \PHPUnit_Framework_TestCase
             ->thenThrow(\Phake::mock('\\Predis\\CommunicationException'))
             ->thenReturn('ok');
 
+        // sentinel nodes configuration
+        $sentinelConfiguration = new Configuration();
+
         // mock master discovery
         $masterDiscovery = \Phake::mock('\\PSRedis\\MasterDiscovery');
-        \Phake::when($masterDiscovery)->getMaster()
+        \Phake::when($masterDiscovery)->getNode($sentinelConfiguration)
             ->thenReturn($master)
             ->thenReturn($master);
 
         // testing proxy
-        $haclient = new HAClient($masterDiscovery);
+        $haclient = new HAClient($sentinelConfiguration, $masterDiscovery);
         $haclient->get('test');
     }
 
@@ -80,13 +91,16 @@ class HAClientTest extends \PHPUnit_Framework_TestCase
         \Phake::when($master)->get('test')
             ->thenThrow(new ConnectionError());
 
+        // sentinel nodes configuration
+        $sentinelConfiguration = new Configuration();
+
         // mock master discovery
         $masterDiscovery = \Phake::mock('\\PSRedis\\MasterDiscovery');
-        \Phake::when($masterDiscovery)->getMaster()
+        \Phake::when($masterDiscovery)->getNode($sentinelConfiguration)
             ->thenReturn($master);
 
         // testing proxy
-        $haclient = new HAClient($masterDiscovery);
+        $haclient = new HAClient($sentinelConfiguration, $masterDiscovery);
         $haclient->get('test');
     }
 }

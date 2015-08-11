@@ -9,6 +9,8 @@ use PSRedis\Exception\ConnectionError;
 use PSRedis\Exception\InvalidProperty;
 use PSRedis\Exception\RoleError;
 use PSRedis\Exception\SentinelError;
+use PSRedis\NodeDiscovery\NodeDiscoveryStrategy;
+use PSRedis\Sentinel\Configuration;
 
 /**
  * Class MasterDiscovery
@@ -18,19 +20,13 @@ use PSRedis\Exception\SentinelError;
  * @package PSRedis
  * @see http://redis.io/topics/sentinel-clients Official client requirements. Explains the different steps taken in master discovery.
  */
-class MasterDiscovery
+class MasterDiscovery implements NodeDiscoveryStrategy
 {
     /**
      * The name of the set consisting of 1 master and  1 or more replicated slaves
      * @var string
      */
     private $name;
-
-    /**
-     * The collection of sentinels to use when trying to discover the current master node
-     * @var Client[]
-     */
-    private $sentinels = array();
 
     /**
      * The strategy to use when none of the sentinels could be reached.  Should we try again or leave it at that?
@@ -74,22 +70,6 @@ class MasterDiscovery
     }
 
     /**
-     * @param Client $sentinelClient
-     */
-    public function addSentinel(Client $sentinelClient)
-    {
-        $this->sentinels[] = $sentinelClient;
-    }
-
-    /**
-     * @return \SplFixedArray
-     */
-    public function getSentinels()
-    {
-        return \SplFixedArray::fromArray($this->sentinels);
-    }
-
-    /**
      * Validation method for the name of the sentinels and redis collection
      * @param $name
      * @throws Exception\InvalidProperty
@@ -101,15 +81,9 @@ class MasterDiscovery
         }
     }
 
-    /**
-     * Actual discovery logic to find out the IP and port of the master node
-     * @return Client\ClientAdapter
-     * @throws Exception\ConnectionError
-     * @throws Exception\ConfigurationError
-     */
-    public function getMaster()
+    public function getNode(Configuration $sentinelConfiguration)
     {
-        if ($this->getSentinels()->count() == 0) {
+        if ($sentinelConfiguration->getSentinels()->count() == 0) {
             throw new ConfigurationError('You need to configure and add sentinel nodes before attempting to fetch a master');
         }
 
@@ -119,7 +93,7 @@ class MasterDiscovery
 
             try {
 
-                foreach ($this->getSentinels() as $sentinelClient) {
+                foreach ($sentinelConfiguration->getSentinels() as $sentinelClient) {
                     /** @var $sentinelClient Client */
                     try {
                         $sentinelClient->connect();
