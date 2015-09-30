@@ -11,7 +11,7 @@ the following in your composer file:
 
 ```
 "require": {
-    "jamescauwelier/psredis": "~1.0"
+    "jamescauwelier/psredis": "~1.1"
 },
 ```
 
