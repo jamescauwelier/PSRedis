@@ -5,15 +5,16 @@ namespace PSRedis;
 
 
 use PSRedis\Exception\ConnectionError;
+use PSRedis\NodeDiscovery\MasterDiscovery;
 use PSRedis\Sentinel\Configuration;
 
 class HAClientTest extends \PHPUnit_Framework_TestCase
 {
     public function testThatAnHAClientContainsADependencyOnMasterDiscovery()
     {
-        $haclient = new HAClient(new Configuration(), new MasterDiscovery('test'));
+        $haclient = new HAClient(new Configuration('test'), new MasterDiscovery('test'));
         $this->assertAttributeInstanceOf('\\PSRedis\\Sentinel\\Configuration', 'sentinelConfiguration', $haclient);
-        $this->assertAttributeInstanceOf('\\PSRedis\\MasterDiscovery', 'masterDiscovery', $haclient, 'The master discovery dependency should be saved in the object');
+        $this->assertAttributeInstanceOf('\\PSRedis\\NodeDiscovery\\MasterDiscovery', 'masterDiscovery', $haclient, 'The master discovery dependency should be saved in the object');
     }
 
     public function testThatRedisCommandsAreProxiedToRedisClient()
@@ -24,10 +25,10 @@ class HAClientTest extends \PHPUnit_Framework_TestCase
         \Phake::when($master)->set('business', 'sparkcentral')->thenReturn(true);
 
         // configure sentinel nodes
-        $sentinelConfiguration = new Configuration();
+        $sentinelConfiguration = new Configuration('test');
 
         // mock master discovery
-        $masterDiscovery = \Phake::mock('\\PSRedis\\MasterDiscovery');
+        $masterDiscovery = \Phake::mock('\\PSRedis\\NodeDiscovery\\MasterDiscovery');
         \Phake::when($masterDiscovery)->getNode($sentinelConfiguration)->thenReturn($master);
 
         // testing proxy
@@ -45,10 +46,10 @@ class HAClientTest extends \PHPUnit_Framework_TestCase
             ->thenReturn('ok');
 
         // sentinel nodes configuration
-        $sentinelConfiguration = new Configuration();
+        $sentinelConfiguration = new Configuration('test');
 
         // mock master discovery
-        $masterDiscovery = \Phake::mock('\\PSRedis\\MasterDiscovery');
+        $masterDiscovery = \Phake::mock('\\PSRedis\\NodeDiscovery\\MasterDiscovery');
         \Phake::when($masterDiscovery)->getNode($sentinelConfiguration)
             ->thenReturn($master)
             ->thenReturn($master);
@@ -69,10 +70,10 @@ class HAClientTest extends \PHPUnit_Framework_TestCase
             ->thenReturn('ok');
 
         // sentinel nodes configuration
-        $sentinelConfiguration = new Configuration();
+        $sentinelConfiguration = new Configuration('test');
 
         // mock master discovery
-        $masterDiscovery = \Phake::mock('\\PSRedis\\MasterDiscovery');
+        $masterDiscovery = \Phake::mock('\\PSRedis\\NodeDiscovery\\MasterDiscovery');
         \Phake::when($masterDiscovery)->getNode($sentinelConfiguration)
             ->thenReturn($master)
             ->thenReturn($master);
@@ -92,10 +93,10 @@ class HAClientTest extends \PHPUnit_Framework_TestCase
             ->thenThrow(new ConnectionError());
 
         // sentinel nodes configuration
-        $sentinelConfiguration = new Configuration();
+        $sentinelConfiguration = new Configuration('test');
 
         // mock master discovery
-        $masterDiscovery = \Phake::mock('\\PSRedis\\MasterDiscovery');
+        $masterDiscovery = \Phake::mock('\\PSRedis\\NodeDiscovery\\MasterDiscovery');
         \Phake::when($masterDiscovery)->getNode($sentinelConfiguration)
             ->thenReturn($master);
 

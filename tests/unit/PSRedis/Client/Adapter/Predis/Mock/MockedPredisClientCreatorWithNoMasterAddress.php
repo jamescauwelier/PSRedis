@@ -1,10 +1,6 @@
 <?php
-
-
 namespace PSRedis\Client\Adapter\Predis\Mock;
 
-
-use PSRedis\Client\Adapter\Predis\Mock\AbstractMockedPredisClientCreator;
 use PSRedis\Client\Adapter\Predis\PredisClientFactory;
 
 class MockedPredisClientCreatorWithNoMasterAddress

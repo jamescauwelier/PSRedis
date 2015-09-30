@@ -4,6 +4,11 @@
 namespace PSRedis;
 
 use PSRedis\Exception\ConnectionError;
+use PSRedis\Exception\RoleError;
+use PSRedis\Exception\SentinelError;
+use PSRedis\MasterDiscovery\BackoffStrategy;
+use PSRedis\MasterDiscovery\BackoffStrategy\None;
+use PSRedis\NodeDiscovery\MasterDiscovery;
 use PSRedis\Sentinel\Configuration;
 
 /**
@@ -30,6 +35,18 @@ class HAClient
     private $masterDiscovery;
 
     /**
+     * @var BackoffStrategy
+     */
+    private $backoffStrategy;
+
+    /**
+     * The callable to be called when backing off during master discovery.  To be used for logging and making the
+     * code testable (See integration tests)
+     * @var callable
+     */
+    private $backoffObserver;
+
+    /**
      * The master node to connect to
      * @var Client
      */
@@ -46,6 +63,24 @@ class HAClient
     {
         $this->sentinelConfiguration = $sentinelConfiguration;
         $this->masterDiscovery = $masterDiscovery;
+        $this->setBackoffStrategy(new None());
+    }
+
+    /**
+     * @param BackoffStrategy $backoffStrategy
+     */
+    public function setBackoffStrategy(BackoffStrategy $backoffStrategy)
+    {
+        $this->backoffStrategy = $backoffStrategy;
+    }
+
+
+    /**
+     * @param callable $observer
+     */
+    public function setBackoffObserver (callable $observer)
+    {
+        $this->backoffObserver = $observer;
     }
 
     /**
@@ -102,7 +137,34 @@ class HAClient
     private function proxyFunctionCallToMaster($name, array $arguments)
     {
         if ($this->masterIsUnknown()) {
-            $this->master = $this->masterDiscovery->getNode($this->sentinelConfiguration);
+
+            $this->backoffStrategy->reset();
+
+            do {
+
+                try {
+                    $this->master = $this->masterDiscovery->getNode($this->sentinelConfiguration);
+                    break;
+                } catch (ConnectionError $e) {
+                    // on connection errors, back-off
+                } catch (SentinelError $e) {
+                    // on sentinel errors, back-off
+                } catch (RoleError $e) {
+                    // when master has stepped down, back-off and try again
+                }
+
+
+                if ($this->backoffStrategy->shouldWeTryAgain()) {
+                    $backoffInMicroseconds = $this->backoffStrategy->getBackoffInMicroSeconds();
+                    if (!empty($this->backoffObserver)) {
+                        call_user_func($this->backoffObserver, $backoffInMicroseconds);
+                    }
+                    usleep($backoffInMicroseconds);
+                }
+
+            } while ($this->backoffStrategy->shouldWeTryAgain());
+
+
         }
 
         return call_user_func_array(array($this->master, $name), $arguments);

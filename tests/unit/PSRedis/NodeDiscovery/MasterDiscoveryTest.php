@@ -1,12 +1,12 @@
 <?php
 
-namespace PSRedis;
+namespace PSRedis\NodeDiscovery;
 
+use PSRedis\Client;
 use PSRedis\Client\Adapter\Predis\Mock\MockedPredisClientCreatorWithNoMasterAddress;
 use PSRedis\MasterDiscovery\BackoffStrategy\Incremental;
 use PSRedis\Exception\ConnectionError;
 use PSRedis\Client\Adapter\PredisClientAdapter;
-use PSRedis\MasterDiscovery\BackoffStrategy\None;
 use PSRedis\Sentinel\Configuration;
 
 class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
@@ -116,23 +116,11 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
         return $sentinelClient;
     }
 
-    public function testAMonitorSetHasAName()
-    {
-        $masterDiscovery = new MasterDiscovery($this->masterName);
-        $this->assertEquals($this->masterName, $masterDiscovery->getName(), 'A master discovery is identified by a name (sentinels can monitor more than 1 master)');
-    }
-
-    public function testAMonitorSetNameCannotBeEmpty()
-    {
-        $this->setExpectedException('\\PSRedis\\Exception\\InvalidProperty', 'A master discovery needs a valid name (sentinels can monitor more than 1 master)');
-        new MasterDiscovery('');
-    }
-
     public function testThatWeNeedNodesConfigurationToDiscoverAMaster()
     {
         $this->setExpectedException('\\PSRedis\\Exception\\ConfigurationError', 'You need to configure and add sentinel nodes before attempting to fetch a master');
-        $masterDiscovery = new MasterDiscovery($this->masterName);
-        $masterDiscovery->getNode(new Configuration());
+        $masterDiscovery = new MasterDiscovery();
+        $masterDiscovery->getNode(new Configuration($this->masterName));
     }
 
     public function testThatMasterCannotBeFoundIfWeCannotConnectToSentinels()
@@ -140,7 +128,7 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
         $this->setExpectedException('\\PSRedis\\Exception\\ConnectionError', 'All sentinels are unreachable');
         $sentinel1 = $this->mockOfflineSentinel();
         $sentinel2 = $this->mockOfflineSentinel();
-        $sentinelConfiguration = new Configuration();
+        $sentinelConfiguration = new Configuration($this->masterName);
         $sentinelConfiguration->addSentinel($sentinel1);
         $sentinelConfiguration->addSentinel($sentinel2);
         $masterDiscovery = new MasterDiscovery('all-fail');
@@ -155,7 +143,7 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
         $sentinel1 = $this->mockOfflineSentinel();
         $sentinel2 = $this->mockOnlineSentinel();
 
-        $sentinelConfiguration = new Configuration();
+        $sentinelConfiguration = new Configuration($this->masterName);
         $sentinelConfiguration->addSentinel($sentinel1);
         $sentinelConfiguration->addSentinel($sentinel2);
 
@@ -174,7 +162,7 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
 
         $sentinel1 = $this->mockOnlineSentinelWithMasterSteppingDown();
         $sentinel2 = $this->mockOnlineSentinel();
-        $sentinelConfiguration = new Configuration();
+        $sentinelConfiguration = new Configuration($this->masterName);
         $sentinelConfiguration->addSentinel($sentinel1);
         $sentinelConfiguration->addSentinel($sentinel2);
 
@@ -189,7 +177,7 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
 
         $sentinel1 = $this->mockOfflineSentinel();
         $sentinel2 = $this->mockOnlineSentinelWithMasterSteppingDown();
-        $sentinelConfiguration = new Configuration();
+        $sentinelConfiguration = new Configuration($this->masterName);
         $sentinelConfiguration->addSentinel($sentinel1);
         $sentinelConfiguration->addSentinel($sentinel2);
 
@@ -206,7 +194,7 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
         $noBackoff = new Incremental(0, 1);
         $noBackoff->setMaxAttempts(1);
 
-        $sentinelConfiguration = new Configuration();
+        $sentinelConfiguration = new Configuration($this->masterName);
         $sentinelConfiguration->addSentinel($this->mockOfflineSentinel());
         $sentinelConfiguration->addSentinel($this->mockOnlineSentinel());
 
@@ -224,7 +212,7 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
         $backoffOnce = new Incremental(0, 1);
         $backoffOnce->setMaxAttempts(2);
 
-        $sentinelConfiguration = new Configuration();
+        $sentinelConfiguration = new Configuration($this->masterName);
         $sentinelConfiguration->addSentinel($this->mockOfflineSentinel());
         $sentinelConfiguration->addSentinel($this->mockOnlineSentinelWithMasterSteppingDown());
 
@@ -250,7 +238,7 @@ class MasterDiscoveryTest extends \PHPUnit_Framework_TestCase
         $backoff = new Incremental(0, 1);
         $backoff->setMaxAttempts(2);
 
-        $sentinelConfiguration = new Configuration();
+        $sentinelConfiguration = new Configuration($this->masterName);
         $sentinelConfiguration->addSentinel($this->mockOfflineSentinel());
 
         $masterDiscovery = new MasterDiscovery('online-sentinel');
