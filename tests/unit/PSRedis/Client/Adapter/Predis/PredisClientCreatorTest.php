@@ -67,5 +67,30 @@ class PredisClientCreatorTest extends \PHPUnit_Framework_TestCase
         $clientFactory = new PredisClientCreator();
         $clientFactory->createClient('boe');
     }
+
+    public function testThatOptionsArePasstToClients()
+    {
+        $expectedOptions = [
+            'testKey'           => 'testValue',
+            'anotherTestKey'    => 'anotherTestValue'
+        ];
+
+        $clientFactory = new PredisClientCreator($expectedOptions);
+
+        $redisClient = $clientFactory->createClient(Client::TYPE_REDIS);
+        $actualOptions = [
+            'testKey'           => $redisClient->getOptions()->testKey,
+            'anotherTestKey'    => $redisClient->getOptions()->anotherTestKey,
+        ];
+        $this->assertEquals($expectedOptions, $actualOptions);
+
+        $sentinelClient = $clientFactory->createClient(Client::TYPE_SENTINEL);
+        $actualOptions = [
+            'testKey'           => $sentinelClient->getOptions()->testKey,
+            'anotherTestKey'    => $sentinelClient->getOptions()->anotherTestKey,
+        ];
+        $this->assertEquals($expectedOptions, $actualOptions);
+    }
+
 }
  
