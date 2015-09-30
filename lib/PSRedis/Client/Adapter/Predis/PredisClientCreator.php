@@ -17,6 +17,19 @@ use PSRedis\Exception\ConfigurationError;
 class PredisClientCreator
     implements PredisClientFactory
 {
+    /**
+     * @var array
+     */
+    private $options;
+
+    /**
+     * @param array|null $options Additional options for the Predis Client
+     */
+    public function __construct(array $options = null)
+    {
+        $this->options = $options;
+    }
+
     public function createClient($clientType, array $parameters = array())
     {
         switch($clientType)
@@ -32,7 +45,7 @@ class PredisClientCreator
 
     private function createSentinelClient(array $parameters = array())
     {
-        $predisClient = new \Predis\Client($parameters);
+        $predisClient = new \Predis\Client($parameters, $this->options);
         $predisClient->getProfile()->defineCommand(
             'sentinel', '\\PSRedis\\Client\\Adapter\\Predis\\Command\\SentinelCommand'
         );
@@ -45,7 +58,7 @@ class PredisClientCreator
 
     private function createRedisClient(array $parameters = array())
     {
-        $predisClient = new \Predis\Client($parameters);
+        $predisClient = new \Predis\Client($parameters, $this->options);
         $predisClient->getProfile()->defineCommand(
             'role', '\\PSRedis\\Client\\Adapter\\Predis\\Command\\RoleCommand'
         );
