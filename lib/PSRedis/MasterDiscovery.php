@@ -2,6 +2,7 @@
 
 namespace PSRedis;
 
+use Predis\Connection\ConnectionException;
 use PSRedis\MasterDiscovery\BackoffStrategy\None;
 use PSRedis\MasterDiscovery\BackoffStrategy;
 use PSRedis\Exception\ConfigurationError;
@@ -130,6 +131,8 @@ class MasterDiscovery
                             throw new RoleError('Only a node with role master may be returned (maybe the master was stepping down during connection?)');
                         }
                     } catch (ConnectionError $e) {
+                        // on error, try to connect to next sentinel
+                    } catch (ConnectionException $e) {
                         // on error, try to connect to next sentinel
                     } catch (SentinelError $e) {
                         // when the sentinel throws an error, we try the next sentinel in the set

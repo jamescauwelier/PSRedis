@@ -84,6 +84,8 @@ class PredisClientAdapter
             'scheme'    => 'tcp',
             'host'      => $this->ipAddress,
             'port'      => $this->port,
+            'timeout'   => 1.0,
+            'read_write_timeout' => 1.0
         );
     }
 
