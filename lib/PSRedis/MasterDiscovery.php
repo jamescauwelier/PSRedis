@@ -33,6 +33,12 @@ class MasterDiscovery
     private $sentinels = array();
 
     /**
+     * Defines whether a random sentinel should be used.
+     * @var bool
+     */
+    private $useLoadBalancing = false;
+
+    /**
      * The strategy to use when none of the sentinels could be reached.  Should we try again or leave it at that?
      * @var MasterDiscovery\BackoffStrategy\None
      */
@@ -86,7 +92,11 @@ class MasterDiscovery
      */
     public function getSentinels()
     {
-        return \SplFixedArray::fromArray($this->sentinels);
+        $sentinels = $this->sentinels;
+        if($this->useLoadBalancing){
+            shuffle($sentinels);
+        }
+        return \SplFixedArray::fromArray($sentinels);
     }
 
     /**
@@ -159,5 +169,9 @@ class MasterDiscovery
     public function setBackoffObserver (callable $observer)
     {
         $this->backoffObserver = $observer;
+    }
+
+    public function setUseLoadBalancing($switch){
+        $this->useLoadBalancing = (bool) $switch;
     }
 } 
