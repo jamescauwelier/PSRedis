@@ -35,6 +35,12 @@ class PredisClientAdapter
     private $predisClientFactory;
 
     /**
+     * Additional parameters passed to the Predis client.
+     * @var array
+     */
+    private $predisClientParameters;
+
+    /**
      * @var string
      */
     private $clientType;
@@ -43,10 +49,11 @@ class PredisClientAdapter
      * @param PredisClientFactory $clientFactory
      * @param $clientType string
      */
-    public function __construct(PredisClientFactory $clientFactory, $clientType)
+    public function __construct(PredisClientFactory $clientFactory, $clientType, array $clientParameters = array())
     {
         $this->predisClientFactory = $clientFactory;
         $this->clientType = $clientType;
+        $this->predisClientParameters = $clientParameters;
     }
 
     /**
@@ -80,13 +87,12 @@ class PredisClientAdapter
 
     private function getPredisClientParameters()
     {
-        return array(
+        $default_parameters = array(
             'scheme'    => 'tcp',
             'host'      => $this->ipAddress,
-            'port'      => $this->port,
-            'timeout'   => 1.0,
-            'read_write_timeout' => 1.0
+            'port'      => $this->port
         );
+        return array_merge($default_parameters, $this->predisClientParameters);
     }
 
     /**
