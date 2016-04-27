@@ -42,6 +42,15 @@
     - name: Start Sentinel
       service: name=sentinel state=started
 
+    - name: Create fifo for hanging sentinel
+      command: creates=/var/run/hanging-sentinel-stdin mkfifo /var/run/hanging-sentinel-stdin
+
+    - name: Configure Upstart for Hanging Sentinel
+      template: src=files/upstart/hanging-sentinel.j2 dest=/etc/init/hanging-sentinel.conf
+
+    - name: Start Hanging Sentinel
+      service: name=hanging-sentinel state=started
+
   handlers:
 
       - name: Restart Sentinel

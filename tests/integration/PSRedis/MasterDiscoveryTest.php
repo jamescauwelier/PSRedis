@@ -211,5 +211,31 @@ class MasterDiscoveryTest extends Redis_Integration_TestCase
         // try to discover the master
         $master = $masterDiscovery->getMaster();
     }
+
+    public function testBrokenSentinel()
+    {
+        // we need a factory to create the clients
+        $clientFactory = new PredisClientCreator();
+
+        // we need an adapter for each sentinel client too!
+        $clientAdapter = new PredisClientAdapter($clientFactory, Client::TYPE_SENTINEL);
+        $sentinel1 = new Client('192.168.50.40', '26379', $clientAdapter);
+
+        $clientAdapter = new PredisClientAdapter($clientFactory, Client::TYPE_SENTINEL);
+        $broken_sentinel = new Client('192.168.50.30', '26380', $clientAdapter);
+
+        // now we can start discovering where the master is
+
+        $masterDiscovery = new MasterDiscovery('integrationtests');
+        $masterDiscovery->addSentinel($broken_sentinel);
+        $masterDiscovery->addSentinel($sentinel1);
+
+        $start = microtime();
+        // try to discover the master
+        $masterDiscovery->getMaster();
+        $finish = microtime();
+
+        $this->assertLessThan(1000, $finish - $start);
+    }
+
 }
- 

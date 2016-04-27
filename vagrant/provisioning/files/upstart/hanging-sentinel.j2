@@ -1,0 +1,8 @@
+description "hanging sentinel server"
+
+start on runlevel [23]
+stop on shutdown
+
+respawn
+
+exec sudo -u redis nc -l -p 26380 < /var/run/hanging-sentinel-stdin
