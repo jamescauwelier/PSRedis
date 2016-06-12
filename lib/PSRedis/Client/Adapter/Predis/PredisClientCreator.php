@@ -46,10 +46,10 @@ class PredisClientCreator
     private function createSentinelClient(array $parameters = array())
     {
         $predisClient = new \Predis\Client($parameters, $this->options);
-        $predisClient->getProfile()->defineCommand(
+        $predisClient->getCommandFactory()->defineCommand(
             'sentinel', '\\PSRedis\\Client\\Adapter\\Predis\\Command\\SentinelCommand'
         );
-        $predisClient->getProfile()->defineCommand(
+        $predisClient->getCommandFactory()->defineCommand(
             'role', '\\PSRedis\\Client\\Adapter\\Predis\\Command\\RoleCommand'
         );
 
@@ -59,7 +59,7 @@ class PredisClientCreator
     private function createRedisClient(array $parameters = array())
     {
         $predisClient = new \Predis\Client($parameters, $this->options);
-        $predisClient->getProfile()->defineCommand(
+        $predisClient->getCommandFactory()->defineCommand(
             'role', '\\PSRedis\\Client\\Adapter\\Predis\\Command\\RoleCommand'
         );
 
