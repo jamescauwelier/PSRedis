@@ -65,4 +65,4 @@ class PredisClientCreator
 
         return $predisClient;
     }
-}
+} 
