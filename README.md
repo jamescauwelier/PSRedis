@@ -1,5 +1,7 @@
 # PSRedis - Sentinel wrapper for PHP redis clients
 
+**NOTE: I am no longer actively maintaining this project and I'm looking for another maintainer to take over from me.**
+
 A PHP client for redis sentinel connections as a wrapper on other redis clients.  The name stands for *P*HP *S*entinel
 client for *R*edis.  I am sure other would be more creative in coming up with a name.
 
